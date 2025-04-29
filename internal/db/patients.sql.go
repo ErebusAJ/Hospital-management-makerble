@@ -21,6 +21,29 @@ func (q *Queries) DeletePatient(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getPatientByEmail = `-- name: GetPatientByEmail :one
+SELECT id, name, email, phone, address, receptionist_id, doctor_id, password_hash, created_at, updated_at FROM patients
+WHERE email = $1
+`
+
+func (q *Queries) GetPatientByEmail(ctx context.Context, email string) (Patient, error) {
+	row := q.db.QueryRowContext(ctx, getPatientByEmail, email)
+	var i Patient
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Phone,
+		&i.Address,
+		&i.ReceptionistID,
+		&i.DoctorID,
+		&i.PasswordHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getPatientDetailByID = `-- name: GetPatientDetailByID :one
 
 SELECT id, name, email, phone, address, receptionist_id, doctor_id, password_hash, created_at, updated_at FROM patients

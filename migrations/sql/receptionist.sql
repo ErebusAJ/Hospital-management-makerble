@@ -16,6 +16,10 @@ WHERE id = $5;
 SELECT * FROM receptionist
 WHERE id = $1;
 
+-- name: GetReceptionistByEmail :one
+SELECT * FROM receptionist
+WHERE email = $1;
+
 -- name: ListReceptionists :many
 SELECT * FROM receptionist
 ORDER BY created_at DESC;

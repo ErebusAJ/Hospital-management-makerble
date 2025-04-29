@@ -47,6 +47,28 @@ func (q *Queries) DeleteDoctor(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getDoctorByEmail = `-- name: GetDoctorByEmail :one
+SELECT id, name, email, phone, degree, specialization, password_hash, created_at, updated_at FROM doctors
+WHERE email = $1
+`
+
+func (q *Queries) GetDoctorByEmail(ctx context.Context, email string) (Doctor, error) {
+	row := q.db.QueryRowContext(ctx, getDoctorByEmail, email)
+	var i Doctor
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Phone,
+		&i.Degree,
+		&i.Specialization,
+		&i.PasswordHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getDoctorByID = `-- name: GetDoctorByID :one
 SELECT id, name, email, phone, degree, specialization, password_hash, created_at, updated_at FROM doctors
 WHERE id = $1

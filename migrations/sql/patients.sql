@@ -17,6 +17,10 @@ WHERE id=$6;  -- patient's UUID
 SELECT * FROM patients
 WHERE id=$1;
 
+-- name: GetPatientByEmail :one
+SELECT * FROM patients
+WHERE email = $1;
+
 -- name: DeletePatient :exec
 DELETE FROM patients
 WHERE id=$1;

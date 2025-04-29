@@ -21,5 +21,6 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	r.POST("/v1/reception/register", apiCfg.registerReceptionist)
+	r.POST("/v1/login", apiCfg.login)
 
 }

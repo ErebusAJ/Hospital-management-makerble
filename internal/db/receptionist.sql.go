@@ -45,6 +45,27 @@ func (q *Queries) DeleteReceptionist(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getReceptionistByEmail = `-- name: GetReceptionistByEmail :one
+SELECT id, name, email, phone, address, password_hash, created_at, updated_at FROM receptionist
+WHERE email = $1
+`
+
+func (q *Queries) GetReceptionistByEmail(ctx context.Context, email string) (Receptionist, error) {
+	row := q.db.QueryRowContext(ctx, getReceptionistByEmail, email)
+	var i Receptionist
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Phone,
+		&i.Address,
+		&i.PasswordHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getReceptionistByID = `-- name: GetReceptionistByID :one
 SELECT id, name, email, phone, address, password_hash, created_at, updated_at FROM receptionist
 WHERE id = $1
