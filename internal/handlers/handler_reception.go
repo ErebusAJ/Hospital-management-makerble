@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"log"
-
 	"github.com/ErebusAJ/makerble-backend/internal/db"
 	"github.com/ErebusAJ/makerble-backend/internal/utils"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/google/uuid"
 )
 
 // registers receptionist
@@ -42,52 +40,6 @@ func (cfg *apiConfig) registerReceptionist(c *gin.Context) {
 	c.IndentedJSON(201, gin.H{"message": "success"})
 }
 
-func (cfg *apiConfig) login(c *gin.Context) {
-	var reqDetails struct {
-		Email string `json:"email" binding:"required"`
-		Pass  string `json:"password" binding:"required"`
-	}
-
-	err := c.BindJSON(&reqDetails)
-	if err != nil {
-		utils.ErrorJSON(c, 400, utils.InvalidError, utils.RequestBodyError, err)
-		return
-	}
-
-	if receptionist, err := cfg.DB.GetReceptionistByEmail(c, reqDetails.Email); err == nil {
-		if err := bcrypt.CompareHashAndPassword([]byte(receptionist.PasswordHash), []byte(reqDetails.Pass)); err == nil {
-			// Generate token & respond
-			token, e := utils.GenerateJWT(receptionist.ID, "receptionist")
-			log.Printf("error %v", e)
-			c.IndentedJSON(200, gin.H{"token": token})
-			return
-		}
-	}
-
-	// Try doctor
-	if doctor, err := cfg.DB.GetDoctorByEmail(c, reqDetails.Email); err == nil {
-		if err := bcrypt.CompareHashAndPassword([]byte(doctor.PasswordHash), []byte(reqDetails.Pass)); err == nil {
-			// Generate token & respond
-			token, e := utils.GenerateJWT(doctor.ID, "doctor")
-			log.Printf("error %v", e)
-			c.IndentedJSON(200, gin.H{"token": token})
-			return
-		}
-	}
-
-	// Try patient
-	if patient, err := cfg.DB.GetPatientByEmail(c, reqDetails.Email); err == nil {
-		if err := bcrypt.CompareHashAndPassword([]byte(patient.PasswordHash), []byte(reqDetails.Pass)); err == nil {
-			// Generate token & respond
-			token, e := utils.GenerateJWT(patient.ID, "patient")
-			log.Printf("error %v", e)
-			c.IndentedJSON(200, gin.H{"token": token})
-			return
-		}
-	}
-
-	utils.ErrorJSON(c, 401, utils.UnauthorizedError, "invalid email or password", nil)
-}
 
 func (cfg *apiConfig) updateReceptionist(c *gin.Context) {
 	var reqDetails struct {
@@ -102,4 +54,70 @@ func (cfg *apiConfig) updateReceptionist(c *gin.Context) {
 		utils.ErrorJSON(c, 400, utils.InvalidError, utils.RequestBodyError, err)
 		return
 	}
+
+	tempID, exists := c.Get("userID")
+	if !exists {
+		utils.ErrorJSON(c, 401, utils.UnauthorizedError, utils.MiddlewareError, err)
+		return
+	}
+	userID := tempID.(uuid.UUID)
+
+	user, err := cfg.DB.GetReceptionistByID(c, userID)
+	if err != nil {
+		utils.ErrorJSON(c, 500, utils.InternalError, utils.DatabaseError, err)
+		return
+	}
+
+	if reqDetails.Name == "" {
+		reqDetails.Name = user.Name
+	}
+	if reqDetails.Email == "" {
+		reqDetails.Email = user.Email
+	}
+	if reqDetails.Phone == "" {
+		reqDetails.Phone = user.Phone
+	}
+	if reqDetails.Address == "" {
+		reqDetails.Address = user.Address
+	}
+
+	err = cfg.DB.UpdateReceptionist(c, db.UpdateReceptionistParams{
+		Name: reqDetails.Name,
+		Email: reqDetails.Email,
+		Phone: reqDetails.Phone,
+		Address: reqDetails.Address,
+		ID: userID,
+	})
+	if err != nil {
+		utils.ErrorJSON(c, 500, utils.InternalError, utils.DatabaseError, err)
+		return
+	}
+}
+
+
+func(cfg *apiConfig) getReceptionists(c *gin.Context){
+	list, err := cfg.DB.ListReceptionists(c)
+	if err != nil {
+		utils.ErrorJSON(c, 500, utils.InternalError, utils.DatabaseError, err)
+		return
+	}
+
+	c.IndentedJSON(200, list)
+}
+
+func(cfg *apiConfig) deleteReceptionist(c *gin.Context){
+	tempID, exists := c.Get("userID")
+	if !exists {
+		utils.ErrorJSON(c, 401, utils.UnauthorizedError, utils.MiddlewareError, nil)
+		return
+	}
+	userID := tempID.(uuid.UUID)
+
+	err := cfg.DB.DeleteReceptionist(c, userID)
+	if err != nil {
+		utils.ErrorJSON(c, 500, utils.InternalError, utils.DatabaseError, err)
+		return
+	}
+
+	c.IndentedJSON(204, gin.H{"msg" : "success"})
 }
