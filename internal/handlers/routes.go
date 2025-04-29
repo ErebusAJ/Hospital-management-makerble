@@ -20,6 +20,6 @@ func RegisterRoutes(r *gin.Engine) {
 		DB: dbQueries,
 	}
 
-	
+	r.POST("/v1/reception/register", apiCfg.registerReceptionist)
 
 }

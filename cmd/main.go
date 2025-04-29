@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/ErebusAJ/makerble-backend/internal/handlers"
 	"github.com/ErebusAJ/makerble-backend/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -28,5 +29,7 @@ func main(){
 		log.Fatal("error getting port no")
 	}
 
+	handlers.RegisterRoutes(r)
+	
 	r.Run(":"+port)
 }

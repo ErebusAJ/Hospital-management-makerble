@@ -9,7 +9,8 @@ const (
 
 const (
 	RequestBodyError	=	"error binding request json"
-	MiddlewareError 
+	MiddlewareError 	=	"error retrieving user id from middleware"
+	InvalidAccess		=	"error invalid access"
 	DatabaseError		=	"error processing database query"
 
 )
