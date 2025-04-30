@@ -3,7 +3,7 @@ FROM golang:1.23-alpine
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=arm64
+    GOARCH=amd64
 
 WORKDIR /app
 
@@ -13,9 +13,9 @@ RUN go mod download && go mod verify
 COPY . .
 
 WORKDIR /app/cmd
-RUN go build -o ../server
+RUN go build -o ../go-server
 WORKDIR /app
 
 EXPOSE 8080
 
-CMD [ "./server" ]
+CMD [ "./go-server" ]

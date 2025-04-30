@@ -1,0 +1,660 @@
+{
+	"info": {
+		"_postman_id": "4a6436a2-aafb-45e3-94fc-a186f7987cd9",
+		"name": "Makerble-task",
+		"description": "API Documentaion for hosptial management backend service.\n\nCreated By: Aarya Jamwal\n\nCompany: Makerble",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39565912"
+	},
+	"item": [
+		{
+			"name": "RECEPTIONIST",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\" : \"Jane\",\n    \"email\" : \"jane@example.com\",\n    \"phone\" : \"987654321\",\n    \"address\" : \"1st Main Street, Chandigarh\",\n    \"password\" : \"testpassAJ\"\n\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local-address}}/v1/register/reception/",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"v1",
+								"register",
+								"reception",
+								""
+							]
+						},
+						"description": "Register a receptionist"
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ1OTYyMTM0LCJleHBpcnkiOjE3NDg1NTQxMzQsInVzZXJJRCI6ImY0YjI4NGYzLWVmZjAtNDdmNC05NWYwLWIwMjcwYTY5ODEwYyIsInVzZXJSb2xlIjoicmVjZXB0aW9uaXN0In0.rA6teHRSZvvt_UvmUrvAphMpWSBBEuapix4mBk6fM48",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone\" : \"123456789\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/receptionist",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"receptionist"
+							]
+						},
+						"description": "Update existing receptionist details"
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ1OTkyNTcwLCJleHBpcnkiOjE3NDg1ODQ1NzAsInVzZXJJRCI6IjJiYTdjN2UxLWE5MWMtNDcxNC04OTUyLTI1YThlMWQ0M2E4NCIsInVzZXJSb2xlIjoicmVjZXB0aW9uaXN0In0.VjB7dDjO-XczWsiwfRLv1oR8Vib13AkaP8h2ZuVZeOg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/receptionist",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"receptionist"
+							]
+						},
+						"description": "Delete existing receptionist"
+					},
+					"response": []
+				},
+				{
+					"name": "list-all",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ1OTk0NDU0LCJleHBpcnkiOjE3NDg1ODY0NTQsInVzZXJJRCI6ImY0YjI4NGYzLWVmZjAtNDdmNC05NWYwLWIwMjcwYTY5ODEwYyIsInVzZXJSb2xlIjoicmVjZXB0aW9uaXN0In0.J3QEVZ9WRZEJA6HfYMgdy9uy7CKtA7TapP0KVicK33o",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/receptionist/all",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"receptionist",
+								"all"
+							]
+						},
+						"description": "List all receptionist (admin only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint for receptionist"
+		},
+		{
+			"name": "DOCTOR",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\" : \"Dr. Aarya Jamwal\",\n    \"email\" : \"dev.erebusaj@gmail.com\",\n    \"phone\" : \"123647456\",\n    \"degree\" : \"MBBS, MD\",\n    \"specialization\" : \"Pediatrics\",\n    \"password\" : \"testpassAJ\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local-address}}/v1/register/doctor",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"v1",
+								"register",
+								"doctor"
+							]
+						},
+						"description": "Register a doctor"
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ1OTkzMDA1LCJleHBpcnkiOjE3NDg1ODUwMDUsInVzZXJJRCI6IjczY2YyOWQ3LTMyNzAtNGJjMC1hYThlLWJkNDVhYTQ4OGU4ZSIsInVzZXJSb2xlIjoiZG9jdG9yIn0.gKspnU5SVWINzhWrYdMCd-j-RKA1JbgAwE9yZbogN1I",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"specialization\" : \"Gynecologist\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/doctor",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"doctor"
+							]
+						},
+						"description": "Update existing doctor details"
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ1OTk0MjM5LCJleHBpcnkiOjE3NDg1ODYyMzksInVzZXJJRCI6ImI4Njk2ZDlhLTk0OGItNGExYi04YzU2LTMwZjViZWQ3YWJlYyIsInVzZXJSb2xlIjoiZG9jdG9yIn0.2eKKufwhFFa5MGJmh6LYagm1b_2IPr7FGmfVVhG8Xtg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/doctor",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"doctor"
+							]
+						},
+						"description": "Delete existing doctor"
+					},
+					"response": []
+				},
+				{
+					"name": "list-all",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ1OTkzMDA1LCJleHBpcnkiOjE3NDg1ODUwMDUsInVzZXJJRCI6IjczY2YyOWQ3LTMyNzAtNGJjMC1hYThlLWJkNDVhYTQ4OGU4ZSIsInVzZXJSb2xlIjoiZG9jdG9yIn0.gKspnU5SVWINzhWrYdMCd-j-RKA1JbgAwE9yZbogN1I",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/doctor/all",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"doctor",
+								"all"
+							]
+						},
+						"description": "List all doctor (admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "get-patients",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ2MDA0MzAxLCJleHBpcnkiOjE3NDg1OTYzMDEsInVzZXJJRCI6IjczY2YyOWQ3LTMyNzAtNGJjMC1hYThlLWJkNDVhYTQ4OGU4ZSIsInVzZXJSb2xlIjoiZG9jdG9yIn0.VGN5LM1vdPuvzEsaG6eSiteLjVABegQVCsTYOwPFiSw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/doctor/73cf29d7-3270-4bc0-aa8e-bd45aa488e8e/patient",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"doctor",
+								"73cf29d7-3270-4bc0-aa8e-bd45aa488e8e",
+								"patient"
+							]
+						},
+						"description": "Get patients of a logged in doctor"
+					},
+					"response": []
+				},
+				{
+					"name": "register-medical-data",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ2MDA0MzAxLCJleHBpcnkiOjE3NDg1OTYzMDEsInVzZXJJRCI6IjczY2YyOWQ3LTMyNzAtNGJjMC1hYThlLWJkNDVhYTQ4OGU4ZSIsInVzZXJSb2xlIjoiZG9jdG9yIn0.VGN5LM1vdPuvzEsaG6eSiteLjVABegQVCsTYOwPFiSw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symptoms\": \"Headache, dizziness, blurred vision\",\n  \"diagnosis\": \"Migraine\",\n  \"prescription\": \"Ibuprofen 400mg as needed, max twice daily\",\n  \"notes\": \"Patient advised to avoid bright lights and get adequate sleep.\",\n  \"tests\": \"Eye pressure test, MRI (if symptoms persist)\",\n  \"follow_up_date\": \"2025-05-05\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/patient/0daced36-135d-492c-b7ea-40c939fe6108/history",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"patient",
+								"0daced36-135d-492c-b7ea-40c939fe6108",
+								"history"
+							]
+						},
+						"description": "Register medical data of a patient (doctors only)"
+					},
+					"response": []
+				},
+				{
+					"name": "get-patient-data",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ2MDA0MzAxLCJleHBpcnkiOjE3NDg1OTYzMDEsInVzZXJJRCI6IjczY2YyOWQ3LTMyNzAtNGJjMC1hYThlLWJkNDVhYTQ4OGU4ZSIsInVzZXJSb2xlIjoiZG9jdG9yIn0.VGN5LM1vdPuvzEsaG6eSiteLjVABegQVCsTYOwPFiSw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/patient/223fd832-31d9-4df4-9a02-43eb9e8c6fa6/history",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"patient",
+								"223fd832-31d9-4df4-9a02-43eb9e8c6fa6",
+								"history"
+							]
+						},
+						"description": "Get patient medical data"
+					},
+					"response": []
+				},
+				{
+					"name": "update-patient-data",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ2MDA0MzAxLCJleHBpcnkiOjE3NDg1OTYzMDEsInVzZXJJRCI6IjczY2YyOWQ3LTMyNzAtNGJjMC1hYThlLWJkNDVhYTQ4OGU4ZSIsInVzZXJSb2xlIjoiZG9jdG9yIn0.VGN5LM1vdPuvzEsaG6eSiteLjVABegQVCsTYOwPFiSw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symptoms\": \"Headache, blurred vision\",\n  \"diagnosis\": \"Migraine\",\n  \"prescription\": \"Ibuprofen 400mg as needed, max twice daily\",\n  \"notes\": \"Patient advised to avoid bright lights and get adequate sleep.\",\n  \"tests\": \"Eye pressure test, MRI (if symptoms persist)\",\n  \"follow_up_date\": \"2025-05-05\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/patient/history/fc2bf0e6-217b-4732-b09a-d2c48a147fc1",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"patient",
+								"history",
+								"fc2bf0e6-217b-4732-b09a-d2c48a147fc1"
+							]
+						},
+						"description": "Update patient medical data"
+					},
+					"response": []
+				},
+				{
+					"name": "delete-patient-data",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/patient/history/fc2bf0e6-217b-4732-b09a-d2c48a147fc1",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"patient",
+								"history",
+								"fc2bf0e6-217b-4732-b09a-d2c48a147fc1"
+							]
+						},
+						"description": "Delete patient medical data"
+					},
+					"response": []
+				}
+			],
+			"description": "Doctor endpoints"
+		},
+		{
+			"name": "PATIENTS",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ1OTYyMTM0LCJleHBpcnkiOjE3NDg1NTQxMzQsInVzZXJJRCI6ImY0YjI4NGYzLWVmZjAtNDdmNC05NWYwLWIwMjcwYTY5ODEwYyIsInVzZXJSb2xlIjoicmVjZXB0aW9uaXN0In0.rA6teHRSZvvt_UvmUrvAphMpWSBBEuapix4mBk6fM48",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\" : \"Brian\",\n    \"email\" : \"brian@example.com\",\n    \"phone\" : \"32923412\",\n    \"address\" : \"22 sector, Delhi\",\n    \"doctor_id\": \"73cf29d7-3270-4bc0-aa8e-bd45aa488e8e\",\n    \"password\" : \"testpassAJ\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/patient/register",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"patient",
+								"register"
+							]
+						},
+						"description": "Patient portal registeration"
+					},
+					"response": []
+				},
+				{
+					"name": "list-all",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ2MDAyMTMyLCJleHBpcnkiOjE3NDg1OTQxMzIsInVzZXJJRCI6ImY0YjI4NGYzLWVmZjAtNDdmNC05NWYwLWIwMjcwYTY5ODEwYyIsInVzZXJSb2xlIjoicmVjZXB0aW9uaXN0In0.FF5jhPQ_sbTcBrISjlCIf20Rm6MOFKDGzyVe64YEy_g",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/patient/all",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"patient",
+								"all"
+							]
+						},
+						"description": "Get list of all patients (admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "get-details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ2MDAyMTMyLCJleHBpcnkiOjE3NDg1OTQxMzIsInVzZXJJRCI6ImY0YjI4NGYzLWVmZjAtNDdmNC05NWYwLWIwMjcwYTY5ODEwYyIsInVzZXJSb2xlIjoicmVjZXB0aW9uaXN0In0.FF5jhPQ_sbTcBrISjlCIf20Rm6MOFKDGzyVe64YEy_g",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/patient/075393d7-839c-4ee8-8efc-4af6d1d8e62b",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"patient",
+								"075393d7-839c-4ee8-8efc-4af6d1d8e62b"
+							]
+						},
+						"description": "Get particular patient details"
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\" : \"testUser\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/patient/075393d7-839c-4ee8-8efc-4af6d1d8e62b",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"patient",
+								"075393d7-839c-4ee8-8efc-4af6d1d8e62b"
+							]
+						},
+						"description": "Update particular patient details (limited options for patients)"
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ2MDAyMTMyLCJleHBpcnkiOjE3NDg1OTQxMzIsInVzZXJJRCI6ImY0YjI4NGYzLWVmZjAtNDdmNC05NWYwLWIwMjcwYTY5ODEwYyIsInVzZXJSb2xlIjoicmVjZXB0aW9uaXN0In0.FF5jhPQ_sbTcBrISjlCIf20Rm6MOFKDGzyVe64YEy_g",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{local-address}}/{{auth}}/patient/560da5be-60e4-4bb3-a8b9-34eebed21936",
+							"host": [
+								"{{local-address}}"
+							],
+							"path": [
+								"{{auth}}",
+								"patient",
+								"560da5be-60e4-4bb3-a8b9-34eebed21936"
+							]
+						},
+						"description": "Delete patient profile (admin only)"
+					},
+					"response": []
+				}
+			],
+			"description": "Patients endpoints"
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\" : \"dev.erebusaj@gmail.com\",\n    \"password\" : \"testpassAJ\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{local-address}}/v1/login",
+					"host": [
+						"{{local-address}}"
+					],
+					"path": [
+						"v1",
+						"login"
+					]
+				},
+				"description": "Universal login (Receptionist/Doctor/User)"
+			},
+			"response": []
+		},
+		{
+			"name": "user-details",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkIjoxNzQ1OTkzMDA1LCJleHBpcnkiOjE3NDg1ODUwMDUsInVzZXJJRCI6IjczY2YyOWQ3LTMyNzAtNGJjMC1hYThlLWJkNDVhYTQ4OGU4ZSIsInVzZXJSb2xlIjoiZG9jdG9yIn0.gKspnU5SVWINzhWrYdMCd-j-RKA1JbgAwE9yZbogN1I",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{local-address}}/{{auth}}/user-details",
+					"host": [
+						"{{local-address}}"
+					],
+					"path": [
+						"{{auth}}",
+						"user-details"
+					]
+				},
+				"description": "Universal get details(doctor/receptionist/patient)"
+			},
+			"response": []
+		}
+	]
+}
