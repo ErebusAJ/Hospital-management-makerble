@@ -1,4 +1,4 @@
--- name: CreateReceptionist :exec
+-- name: RegisterReceptionist :exec
 INSERT INTO receptionist ( name, email, phone, address, password_hash) 
 VALUES ($1, $2, $3, $4, $5);
 

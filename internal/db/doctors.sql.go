@@ -11,32 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const createDoctor = `-- name: CreateDoctor :exec
-INSERT INTO doctors( name, email, phone, degree, specialization, password_hash) 
-VALUES ($1, $2, $3, $4, $5, $6)
-`
-
-type CreateDoctorParams struct {
-	Name           string
-	Email          string
-	Phone          string
-	Degree         string
-	Specialization string
-	PasswordHash   string
-}
-
-func (q *Queries) CreateDoctor(ctx context.Context, arg CreateDoctorParams) error {
-	_, err := q.db.ExecContext(ctx, createDoctor,
-		arg.Name,
-		arg.Email,
-		arg.Phone,
-		arg.Degree,
-		arg.Specialization,
-		arg.PasswordHash,
-	)
-	return err
-}
-
 const deleteDoctor = `-- name: DeleteDoctor :exec
 DELETE FROM doctors
 WHERE id = $1
@@ -127,6 +101,32 @@ func (q *Queries) ListDoctors(ctx context.Context) ([]Doctor, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const registerDoctor = `-- name: RegisterDoctor :exec
+INSERT INTO doctors( name, email, phone, degree, specialization, password_hash) 
+VALUES ($1, $2, $3, $4, $5, $6)
+`
+
+type RegisterDoctorParams struct {
+	Name           string
+	Email          string
+	Phone          string
+	Degree         string
+	Specialization string
+	PasswordHash   string
+}
+
+func (q *Queries) RegisterDoctor(ctx context.Context, arg RegisterDoctorParams) error {
+	_, err := q.db.ExecContext(ctx, registerDoctor,
+		arg.Name,
+		arg.Email,
+		arg.Phone,
+		arg.Degree,
+		arg.Specialization,
+		arg.PasswordHash,
+	)
+	return err
 }
 
 const updateDoctor = `-- name: UpdateDoctor :exec

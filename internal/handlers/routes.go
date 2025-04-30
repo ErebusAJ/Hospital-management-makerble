@@ -25,7 +25,8 @@ func RegisterRoutes(r *gin.Engine) {
 		DB: dbQueries,
 	}
 
-	r.POST("/v1/reception/register", apiCfg.registerReceptionist)
+	r.POST("/v1/register/reception", apiCfg.registerReceptionist)
+	r.POST("/v1/register/doctor", apiCfg.registerDoctor) 
 	r.POST("/v1/login", apiCfg.login)
 
 	protected := r.Group("/v1/auth")
@@ -37,7 +38,16 @@ func RegisterRoutes(r *gin.Engine) {
 		protected.GET("/user-details", apiCfg.getUserDetails)
 
 		// receptionist routes
+		protected.GET("/receptionist/all", apiCfg.getReceptionistList)
 		protected.PUT("/receptionist", apiCfg.updateReceptionist)
+		protected.DELETE("/receptionist", apiCfg.deleteReceptionist)
+
+		// doctors routes
+		protected.GET("/doctor/all", apiCfg.getDoctorList)
+		protected.PUT("/doctor", apiCfg.updateDoctor)
+		protected.DELETE("/doctor", apiCfg.deleteDoctor)
+		
+
 	}
 
 }

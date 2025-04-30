@@ -1,4 +1,4 @@
--- name: CreateDoctor :exec
+-- name: RegisterDoctor :exec
 INSERT INTO doctors( name, email, phone, degree, specialization, password_hash) 
 VALUES ($1, $2, $3, $4, $5, $6);
 

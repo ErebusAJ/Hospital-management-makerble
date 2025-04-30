@@ -25,7 +25,7 @@ func (cfg *apiConfig) registerReceptionist(c *gin.Context) {
 
 	hashedPass, _ := utils.PasswordHash(reqDetails.Pass)
 
-	err = cfg.DB.CreateReceptionist(c, db.CreateReceptionistParams{
+	err = cfg.DB.RegisterReceptionist(c, db.RegisterReceptionistParams{
 		Name:         reqDetails.Name,
 		Email:        reqDetails.Email,
 		Phone:        reqDetails.Phone,
@@ -95,7 +95,7 @@ func (cfg *apiConfig) updateReceptionist(c *gin.Context) {
 }
 
 
-func(cfg *apiConfig) getReceptionists(c *gin.Context){
+func(cfg *apiConfig) getReceptionistList(c *gin.Context){
 	list, err := cfg.DB.ListReceptionists(c)
 	if err != nil {
 		utils.ErrorJSON(c, 500, utils.InternalError, utils.DatabaseError, err)

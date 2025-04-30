@@ -11,30 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const createReceptionist = `-- name: CreateReceptionist :exec
-INSERT INTO receptionist ( name, email, phone, address, password_hash) 
-VALUES ($1, $2, $3, $4, $5)
-`
-
-type CreateReceptionistParams struct {
-	Name         string
-	Email        string
-	Phone        string
-	Address      string
-	PasswordHash string
-}
-
-func (q *Queries) CreateReceptionist(ctx context.Context, arg CreateReceptionistParams) error {
-	_, err := q.db.ExecContext(ctx, createReceptionist,
-		arg.Name,
-		arg.Email,
-		arg.Phone,
-		arg.Address,
-		arg.PasswordHash,
-	)
-	return err
-}
-
 const deleteReceptionist = `-- name: DeleteReceptionist :exec
 DELETE FROM receptionist
 WHERE id = $1
@@ -122,6 +98,30 @@ func (q *Queries) ListReceptionists(ctx context.Context) ([]Receptionist, error)
 		return nil, err
 	}
 	return items, nil
+}
+
+const registerReceptionist = `-- name: RegisterReceptionist :exec
+INSERT INTO receptionist ( name, email, phone, address, password_hash) 
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type RegisterReceptionistParams struct {
+	Name         string
+	Email        string
+	Phone        string
+	Address      string
+	PasswordHash string
+}
+
+func (q *Queries) RegisterReceptionist(ctx context.Context, arg RegisterReceptionistParams) error {
+	_, err := q.db.ExecContext(ctx, registerReceptionist,
+		arg.Name,
+		arg.Email,
+		arg.Phone,
+		arg.Address,
+		arg.PasswordHash,
+	)
+	return err
 }
 
 const updateReceptionist = `-- name: UpdateReceptionist :exec
