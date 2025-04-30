@@ -8,12 +8,12 @@ SET
     name=$1,
     email=$2,
     phone=$3,
-    phone=$4,
-    address=$5,
+    address=$4,
+    doctor_id=$5,
     updated_at=CURRENT_TIMESTAMP
 WHERE id=$6;  -- patient's UUID
 
--- name: GetPatientDetailByID :one
+-- name: GetPatientByID :one
 SELECT * FROM patients
 WHERE id=$1;
 
@@ -21,7 +21,15 @@ WHERE id=$1;
 SELECT * FROM patients
 WHERE email = $1;
 
+-- name: ListPatients :many
+SELECT * FROM patients
+ORDER BY created_at DESC;
+
 -- name: DeletePatient :exec
 DELETE FROM patients
 WHERE id=$1;
 
+-- name: GetPatientsByDoctor
+SELECT * FROM patients
+INNER JOIN doctors ON patients.doctor_id = doctors.id 
+WHERE doctor_id=$1  

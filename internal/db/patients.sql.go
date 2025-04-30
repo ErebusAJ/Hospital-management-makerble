@@ -44,15 +44,15 @@ func (q *Queries) GetPatientByEmail(ctx context.Context, email string) (Patient,
 	return i, err
 }
 
-const getPatientDetailByID = `-- name: GetPatientDetailByID :one
+const getPatientByID = `-- name: GetPatientByID :one
 
 SELECT id, name, email, phone, address, receptionist_id, doctor_id, password_hash, created_at, updated_at FROM patients
 WHERE id=$1
 `
 
 // patient's UUID
-func (q *Queries) GetPatientDetailByID(ctx context.Context, id uuid.UUID) (Patient, error) {
-	row := q.db.QueryRowContext(ctx, getPatientDetailByID, id)
+func (q *Queries) GetPatientByID(ctx context.Context, id uuid.UUID) (Patient, error) {
+	row := q.db.QueryRowContext(ctx, getPatientByID, id)
 	var i Patient
 	err := row.Scan(
 		&i.ID,
@@ -67,6 +67,45 @@ func (q *Queries) GetPatientDetailByID(ctx context.Context, id uuid.UUID) (Patie
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listPatients = `-- name: ListPatients :many
+SELECT id, name, email, phone, address, receptionist_id, doctor_id, password_hash, created_at, updated_at FROM patients
+ORDER BY created_at DESC
+`
+
+func (q *Queries) ListPatients(ctx context.Context) ([]Patient, error) {
+	rows, err := q.db.QueryContext(ctx, listPatients)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Patient
+	for rows.Next() {
+		var i Patient
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.Phone,
+			&i.Address,
+			&i.ReceptionistID,
+			&i.DoctorID,
+			&i.PasswordHash,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const registerPatient = `-- name: RegisterPatient :exec
@@ -103,19 +142,19 @@ SET
     name=$1,
     email=$2,
     phone=$3,
-    phone=$4,
-    address=$5,
+    address=$4,
+    doctor_id=$5,
     updated_at=CURRENT_TIMESTAMP
 WHERE id=$6
 `
 
 type UpdatePatientParams struct {
-	Name    string
-	Email   string
-	Phone   string
-	Phone_2 string
-	Address string
-	ID      uuid.UUID
+	Name     string
+	Email    string
+	Phone    string
+	Address  string
+	DoctorID uuid.UUID
+	ID       uuid.UUID
 }
 
 func (q *Queries) UpdatePatient(ctx context.Context, arg UpdatePatientParams) error {
@@ -123,8 +162,8 @@ func (q *Queries) UpdatePatient(ctx context.Context, arg UpdatePatientParams) er
 		arg.Name,
 		arg.Email,
 		arg.Phone,
-		arg.Phone_2,
 		arg.Address,
+		arg.DoctorID,
 		arg.ID,
 	)
 	return err

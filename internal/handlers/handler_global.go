@@ -83,7 +83,7 @@ func(cfg *apiConfig) getUserDetails(c *gin.Context){
 			return
 		}
 	case "patient":
-		user, err := cfg.DB.GetDoctorByID(c, userID)
+		user, err := cfg.DB.GetPatientByID(c, userID)
 		if err == nil {
 			c.IndentedJSON(200, user)
 			return
