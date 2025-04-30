@@ -22,15 +22,14 @@ ORDER BY visit_date DESC;
 -- name: UpdatePatientHistory :exec
 UPDATE patient_history
 SET
-    visit_date = $2,
-    symptoms = $3,
-    diagnosis = $4,
-    prescription = $5,
-    notes = $6,
-    tests_recommended = $7,
-    follow_up_date = $8,
+    symptoms = $1,
+    diagnosis = $2,
+    prescription = $3,
+    notes = $4,
+    tests_recommended = $5,
+    follow_up_date = $6,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = $1;
+WHERE id = $7;
 
 -- name: DeletePatientHistory :exec
 DELETE FROM patient_history

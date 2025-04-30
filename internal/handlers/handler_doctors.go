@@ -225,12 +225,12 @@ func(cfg *apiConfig) registerMedicalData(c *gin.Context) {
 
 func(cfg *apiConfig) updatePatientMedicalData(c *gin.Context) {
 	var reqDetails struct {
-		Symptoms	string `json:"symptoms" binding:"required"`
-		Diagnosis	string `json:"diagnosis" binding:"required"`
-		Prescription   string `json:"prescription" binding:"required"`
-		Notes	string `json:"notes" binding:"required"`
-		Tests	string `json:"tests" binding:"required"`
-		FollowUp    string `json:"follow_up_date" binding:"required"`
+		Symptoms	string `json:"symptoms"`
+		Diagnosis	string `json:"diagnosis"`
+		Prescription   string `json:"prescription"`
+		Notes	string `json:"notes"`
+		Tests	string `json:"tests"`
+		FollowUp    string `json:"follow_up_date"`
 	}
 
 	err := c.BindJSON(&reqDetails)
@@ -306,6 +306,7 @@ func(cfg *apiConfig) updatePatientMedicalData(c *gin.Context) {
 		Symptoms: reqDetails.Symptoms,
 		Diagnosis: reqDetails.Diagnosis,
 		Prescription: reqDetails.Prescription,
+		FollowUpDate: reqDetails.FollowUp,
 		Notes: notes,
 		TestsRecommended: reqDetails.Tests,
 		ID: medicalID,

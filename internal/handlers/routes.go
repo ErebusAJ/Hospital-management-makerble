@@ -71,6 +71,7 @@ func RegisterFrontend(r *gin.Engine) {
 
 	r.StaticFile("/doctor", "./templates/doctor.html")
 	r.StaticFile("/receptionist", "./templates/receptionist.html")
+	r.StaticFile("/history", "./templates/history.html")
 
 
 	r.GET("/login", loginHTML)

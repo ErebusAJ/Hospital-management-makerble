@@ -1,124 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Doctor Dashboard</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
-    header { background: #007bff; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-    header h1 { margin: 0; font-size: 24px; }
-    header button { padding: 8px 16px; background: #e74c3c; border: none; color: white; border-radius: 4px; cursor: pointer; }
-    header button:hover { background: #c0392b; }
-    .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-    .profile, .patients-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); margin-bottom: 30px; }
-    .patients-box { max-height: 400px; overflow-y: auto; }
-    .patient-card { border-bottom: 1px solid #eee; padding: 12px 0; }
-    .patient-card:last-child { border-bottom: none; }
-    .patient-card h3 { margin: 0 0 5px; font-size: 18px; }
-    .patient-card p { margin: 2px 0; color: #555; }
-    .error { color: red; }
-  </style>
+    <meta charset="UTF-8" />
+    <title>Doctor Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+        }
+
+        header {
+            background: #007bff;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        header button {
+            padding: 8px 16px;
+            background: #e74c3c;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        header button:hover {
+            background: #c0392b;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .profile,
+        .patients-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .patients-box {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .patient-card {
+            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+        }
+
+        .patient-card:last-child {
+            border-bottom: none;
+        }
+
+        .patient-card h3 {
+            margin: 0 0 5px;
+            font-size: 18px;
+        }
+
+        .patient-card p {
+            margin: 2px 0;
+            color: #555;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
 </head>
+
 <body>
 
-  <header>
-    <h1>Doctor Dashboard</h1>
-    <button id="logoutBtn">Logout</button>
-  </header>
+    <header>
+        <h1>Doctor Dashboard</h1>
+        <button id="logoutBtn">Logout</button>
+    </header>
 
-  <div class="container">
-    <div class="profile" id="doctorProfile">
-      <p>Loading profile…</p>
+    <div class="container">
+        <div class="profile" id="doctorProfile">
+            <p>Loading profile…</p>
+        </div>
+
+        <div class="patients-box">
+            <h2>My Patients</h2>
+            <div id="patientsList">
+                <p>Loading patients…</p>
+            </div>
+        </div>
     </div>
 
-    <div class="patients-box">
-      <h2>My Patients</h2>
-      <div id="patientsList">
-        <p>Loading patients…</p>
-      </div>
-    </div>
-  </div>
+    <script>
+        const BASE_URL = 'http://localhost:8080';
+        const API_PATH = '/v1/auth';
 
-  <script>
-    const BASE_URL = 'http://localhost:8080';
-    const API_PATH = '/v1/auth';
-
-    // Redirect if not logged in
-    const token = localStorage.getItem('token');
-    if (!token) {
-      window.location.href = 'login.html';
-    }
-
-    document.getElementById('logoutBtn').onclick = () => {
-      localStorage.clear();
-      window.location.href = '/login';
-    };
-
-    // Helper to GET from API with auth header
-    async function apiGet(path) {
-      const url = BASE_URL + (path.startsWith(API_PATH) ? path : API_PATH + path);
-      const res = await fetch(url, {
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json'
+        // Redirect if not logged in
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
         }
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status}: ${text}`);
-      }
-      return res.json();
-    }
 
-    let doctorID = null;
-    const profileEl = document.getElementById('doctorProfile');
-    const patientsEl = document.getElementById('patientsList');
+        document.getElementById('logoutBtn').onclick = () => {
+            localStorage.clear();
+            window.location.href = '/login';
+        };
 
-    // Load doctor details
-    async function loadDoctor() {
-      try {
-        const doc = await apiGet('/user-details');
-        doctorID = doc.ID;
-        profileEl.innerHTML = `
+        // Helper to GET from API with auth header
+        async function apiGet(path) {
+            const url = BASE_URL + (path.startsWith(API_PATH) ? path : API_PATH + path);
+            const res = await fetch(url, {
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`HTTP ${res.status}: ${text}`);
+            }
+            return res.json();
+        }
+
+        let doctorID = null;
+        const profileEl = document.getElementById('doctorProfile');
+        const patientsEl = document.getElementById('patientsList');
+
+        // Load doctor details
+        async function loadDoctor() {
+            try {
+                const doc = await apiGet('/user-details');
+                doctorID = doc.ID;
+                profileEl.innerHTML = `
           <h2>Dr. ${doc.Name}</h2>
           <p><strong>Email:</strong> ${doc.Email}</p>
           <p><strong>Specialization:</strong> ${doc.Specialization || 'N/A'}</p>
           <p><strong>Degree:</strong> ${doc.Degree || 'N/A'}</p>
         `;
-      } catch (e) {
-        profileEl.innerHTML = `<p class="error">Failed to load profile: ${e.message}</p>`;
-        throw e;
-      }
-    }
-
-    // Load patients list
-    async function loadPatients() {
-      if (!doctorID) {
-        patientsEl.innerHTML = `<p class="error">No doctor ID; cannot load patients.</p>`;
-        return;
-      }
-      try {
-        const patients = await apiGet(`/doctor/${doctorID}/patient`);
-        if (!Array.isArray(patients) || patients.length === 0) {
-          patientsEl.innerHTML = '<p>No patients assigned yet.</p>';
-          return;
+            } catch (e) {
+                profileEl.innerHTML = `<p class="error">Failed to load profile: ${e.message}</p>`;
+                throw e;
+            }
         }
-        patientsEl.innerHTML = patients.map(p => `
-          <div class="patient-card">
-            <h3>${p.Name}</h3>
-            <p><strong>Email:</strong> ${p.Email}</p>
-            <p><strong>Phone:</strong> ${p.Phone || 'N/A'}</p>
-            <p><strong>Address:</strong> ${p.Address || 'N/A'}</p>
-          </div>
-        `).join('');
-      } catch (e) {
-        patientsEl.innerHTML = `<p class="error">Failed to load patients: ${e.message}</p>`;
-      }
-    }
 
-    // Initialize
-    loadDoctor().then(loadPatients).catch(() => {});
-  </script>
+        // Load patients list
+        async function loadPatients() {
+            if (!doctorID) {
+                patientsEl.innerHTML = `<p class="error">No doctor ID; cannot load patients.</p>`;
+                return;
+            }
+            try {
+                const patients = await apiGet(`/doctor/${doctorID}/patient`);
+                if (!Array.isArray(patients) || patients.length === 0) {
+                    patientsEl.innerHTML = '<p>No patients assigned yet.</p>';
+                    return;
+                }
+                patientsEl.innerHTML = patients.map(p => `
+        <div class="patient-card">
+          <h3>${p.Name}</h3>
+          <p><strong>Email:</strong> ${p.Email}</p>
+          <p><strong>Phone:</strong> ${p.Phone || 'N/A'}</p>
+          <p><strong>Address:</strong> ${p.Address || 'N/A'}</p>
+          <button onclick="viewHistory('${p.ID}')">History</button>
+        </div>
+      `).join('');
+            } catch (e) {
+                patientsEl.innerHTML = `<p class="error">Failed to load patients: ${e.message}</p>`;
+            }
+        }
+
+        function viewHistory(patientID) {
+            localStorage.setItem('patientID', patientID);
+            window.location.href = '/history';
+        }
+
+        // Initialize
+        loadDoctor().then(loadPatients).catch(() => { });
+    </script>
 
 </body>
+
 </html>

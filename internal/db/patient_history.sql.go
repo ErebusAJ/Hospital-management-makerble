@@ -8,7 +8,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -131,38 +130,35 @@ func (q *Queries) ListPatientHistoryByPatientID(ctx context.Context, patientID u
 const updatePatientHistory = `-- name: UpdatePatientHistory :exec
 UPDATE patient_history
 SET
-    visit_date = $2,
-    symptoms = $3,
-    diagnosis = $4,
-    prescription = $5,
-    notes = $6,
-    tests_recommended = $7,
-    follow_up_date = $8,
+    symptoms = $1,
+    diagnosis = $2,
+    prescription = $3,
+    notes = $4,
+    tests_recommended = $5,
+    follow_up_date = $6,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = $1
+WHERE id = $7
 `
 
 type UpdatePatientHistoryParams struct {
-	ID               uuid.UUID
-	VisitDate        time.Time
 	Symptoms         string
 	Diagnosis        string
 	Prescription     string
 	Notes            sql.NullString
 	TestsRecommended string
 	FollowUpDate     string
+	ID               uuid.UUID
 }
 
 func (q *Queries) UpdatePatientHistory(ctx context.Context, arg UpdatePatientHistoryParams) error {
 	_, err := q.db.ExecContext(ctx, updatePatientHistory,
-		arg.ID,
-		arg.VisitDate,
 		arg.Symptoms,
 		arg.Diagnosis,
 		arg.Prescription,
 		arg.Notes,
 		arg.TestsRecommended,
 		arg.FollowUpDate,
+		arg.ID,
 	)
 	return err
 }

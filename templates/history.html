@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Patient History</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+    header { background: #007bff; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; font-size: 24px; }
+    header button#logoutBtn { padding: 8px 16px; background: #e74c3c; border: none; color: white; border-radius: 4px; cursor: pointer; }
+    .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+    .section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); margin-bottom: 30px; }
+    .history-entry { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+    .history-entry:last-child { border-bottom: none; }
+    .history-details p { margin: 5px 0; color: #555; }
+    .history-actions { display: flex; flex-direction: column; gap: 5px; margin-left: 15px; flex-shrink: 0; /* Prevent buttons from shrinking */ }
+    .history-actions button { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; min-width: 60px; }
+    .update-btn { background-color: #ffc107; color: black; }
+    .delete-btn { background-color: #dc3545; color: white; }
+    .error { color: red; }
+
+    /* Modal Styles */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+    .modal-content { background-color: #fefefe; margin: 8% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 550px; border-radius: 8px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    .close-btn { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; }
+    .close-btn:hover, .close-btn:focus { color: black; text-decoration: none; }
+    #updateForm h2 { margin-top: 0; margin-bottom: 20px; text-align: center; }
+    #updateForm label { display: block; margin-top: 12px; margin-bottom: 4px; font-weight: bold; font-size: 14px; color: #333; }
+    #updateForm input[type="text"],
+    #updateForm input[type="date"],
+    #updateForm textarea { width: 100%; /* Adjust width calculation */ padding: 10px; margin-top: 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; /* Include padding in width */ font-size: 14px; }
+    #updateForm textarea { min-height: 80px; resize: vertical; }
+    #updateForm .form-buttons { text-align: right; margin-top: 25px; }
+    #updateForm button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
+    #updateForm button[type="submit"] { background-color: #28a745; color: white; }
+    #updateForm button[type="button"] { background-color: #6c757d; color: white; margin-left: 10px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Patient History</h1>
+    <button id="logoutBtn">Logout</button>
+  </header>
+
+  <div class="container">
+    <div class="section" id="patientInfo">
+      <p>Loading patient info…</p>
+    </div>
+
+    <div class="section">
+      <h2>Medical History</h2>
+      <div id="historyList">
+        <p>Loading history…</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="updateDialog" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" id="closeDialogBtn">&times;</span>
+      <form id="updateForm">
+         <h2>Update History Entry</h2>
+         <input type="hidden" id="updateHistoryId">
+         <div>
+             <label for="updateVisitDate">Visit Date (Context Only):</label>
+             <input type="date" id="updateVisitDate" name="VisitDate" readonly disabled style="background:#eee;">
+         </div>
+         <div>
+             <label for="updateSymptoms">Symptoms:</label>
+             <textarea id="updateSymptoms" name="Symptoms"></textarea>
+         </div>
+         <div>
+             <label for="updateDiagnosis">Diagnosis:</label>
+             <textarea id="updateDiagnosis" name="Diagnosis"></textarea>
+         </div>
+         <div>
+             <label for="updatePrescription">Prescription:</label>
+             <textarea id="updatePrescription" name="Prescription"></textarea>
+         </div>
+         <div>
+             <label for="updateNotes">Notes:</label>  <textarea id="updateNotes" name="Notes"></textarea>
+         </div>
+         <div>
+             <label for="updateTestsRecommended">Tests Recommended:</label>
+             <textarea id="updateTestsRecommended" name="TestsRecommended"></textarea>
+         </div>
+         <div>
+             <label for="updateFollowUpDate">Follow Up Date:</label>
+             <input type="date" id="updateFollowUpDate" name="FollowUpDate">
+         </div>
+         <div class="form-buttons">
+            <button type="submit">Save Changes</button>
+            <button type="button" id="cancelUpdateBtn">Cancel</button>
+         </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://localhost:8080';
+    const API_PATH = '/v1/auth';
+    const token = localStorage.getItem('token');
+    const patientID = localStorage.getItem('patientID');
+
+    // --- Global Variables ---
+    let currentHistoryData = []; // To store fetched history data
+
+    // --- DOM Elements ---
+    const patientInfoEl = document.getElementById('patientInfo');
+    const historyListEl = document.getElementById('historyList');
+    const updateDialog = document.getElementById('updateDialog');
+    const updateForm = document.getElementById('updateForm');
+    const closeDialogBtn = document.getElementById('closeDialogBtn');
+    const cancelUpdateBtn = document.getElementById('cancelUpdateBtn');
+
+    // --- Authentication Check ---
+    if (!token) {
+      console.log("No token found, redirecting to login.");
+      window.location.href = '/login'; // Or your login page path
+    }
+    if (!patientID) {
+      alert('No patient selected.');
+      console.log("No patientID found, redirecting to doctor page.");
+      window.location.href = 'doctor.html'; // Or your patient selection page
+    }
+
+    // --- Logout ---
+    document.getElementById('logoutBtn').onclick = () => {
+      localStorage.clear();
+      console.log("Logged out, redirecting to login.");
+      window.location.href = '/login'; // Or your login page path
+    };
+
+    // --- API Helper Functions ---
+    async function apiCall(path, method = 'GET', body = null) {
+        const url = BASE_URL + (path.startsWith(API_PATH) ? path : API_PATH + path);
+        console.log(`API Call: ${method} ${url}`, body ? body : ''); // Log API calls
+        const options = {
+            method: method,
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            }
+        };
+        if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+            options.body = JSON.stringify(body);
+        }
+
+        try {
+            const res = await fetch(url, options);
+            if (!res.ok) {
+                let errorText = `HTTP ${res.status} ${res.statusText}`;
+                try {
+                    const errorData = await res.json();
+                    errorText = `HTTP ${res.status}: ${errorData.message || errorData.error || JSON.stringify(errorData)}`;
+                } catch (e) {
+                    try {
+                         errorText = `HTTP ${res.status}: ${await res.text()}`;
+                    } catch (textError) {
+                        console.error("Failed to read error response body:", textError);
+                    }
+                }
+                 console.error("API Error Response:", errorText);
+                 throw new Error(errorText);
+            }
+            if (res.status === 204) { // No Content
+                console.log(`API Success: ${method} ${url} - No Content`);
+                return null;
+            }
+            const data = await res.json();
+            console.log(`API Success: ${method} ${url}`, data);
+            return data;
+        } catch (e) {
+             console.error(`API call failed for ${method} ${path}:`, e);
+             throw new Error(e.message || `API call failed for ${method} ${path}`);
+        }
+    }
+
+    function apiGet(path) { return apiCall(path, 'GET'); }
+    function apiPut(path, body) { return apiCall(path, 'PUT', body); }
+    function apiDelete(path) { return apiCall(path, 'DELETE'); }
+
+    // --- Load Patient Info ---
+    async function loadPatientInfo() {
+      try {
+        const patient = await apiGet(`/patient/${patientID}`);
+        patientInfoEl.innerHTML = `
+          <h2>${patient.Name}</h2>
+          <p><strong>Email:</strong> ${patient.Email}</p>
+          <p><strong>Phone:</strong> ${patient.Phone || 'N/A'}</p>
+          <p><strong>Address:</strong> ${patient.Address || 'N/A'}</p>
+        `;
+      } catch (e) {
+        patientInfoEl.innerHTML = `<p class="error">Failed to load patient info: ${e.message}</p>`;
+        console.error("Error loading patient info:", e);
+      }
+    }
+
+    // --- Load History ---
+    async function loadHistory() {
+      historyListEl.innerHTML = '<p>Loading history…</p>';
+      try {
+        // Assumes API returns 'ID' and potentially 'Notes: { String: "...", Valid: true }'
+        const history = await apiGet(`/patient/${patientID}/history`);
+        currentHistoryData = history && Array.isArray(history) ? history : []; // Ensure it's an array
+
+        if (currentHistoryData.length === 0) {
+          historyListEl.innerHTML = '<p>No history entries available.</p>';
+          return;
+        }
+
+        // Check if Notes field looks like Go's sql.NullString
+        const getNoteString = (noteField) => {
+            if (noteField && typeof noteField === 'object' && noteField.hasOwnProperty('Valid') && noteField.Valid) {
+                return noteField.String || 'N/A'; // Use String if Valid is true
+            } else if (typeof noteField === 'string' && noteField.trim() !== '') {
+                 return noteField; // Handle if it's just a plain string
+            }
+            return 'N/A'; // Default if null, not Valid, or empty string
+        };
+
+        historyListEl.innerHTML = currentHistoryData.map(entry => `
+          <div class="history-entry" data-id="${entry.ID}">
+            <div class="history-details">
+              <p><strong>Visit Date:</strong> ${entry.VisitDate ? new Date(entry.VisitDate).toLocaleDateString() : 'N/A'}</p>
+              <p><strong>Symptoms:</strong> ${entry.Symptoms || 'N/A'}</p>
+              <p><strong>Diagnosis:</strong> ${entry.Diagnosis || 'N/A'}</p>
+              <p><strong>Prescription:</strong> ${entry.Prescription || 'N/A'}</p>
+              <p><strong>Notes:</strong> ${getNoteString(entry.Notes)}</p> <p><strong>Tests Recommended:</strong> ${entry.TestsRecommended || 'N/A'}</p>
+              <p><strong>Follow Up Date:</strong> ${entry.FollowUpDate ? new Date(entry.FollowUpDate).toLocaleDateString() : 'N/A'}</p>
+            </div>
+            <div class="history-actions">
+              <button class="update-btn" data-id="${entry.ID}">Update</button>
+              <button class="delete-btn" data-id="${entry.ID}">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        historyListEl.innerHTML = `<p class="error">Failed to load history: ${e.message}</p>`;
+        console.error("Error loading history:", e);
+        currentHistoryData = []; // Reset data on error
+      }
+    }
+
+     // --- Format date for input[type=date] (YYYY-MM-DD) ---
+    function formatDateForInput(dateString) {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset()); // Adjust for local timezone
+            return date.toISOString().split('T')[0];
+        } catch (e) {
+            console.error("Error formatting date:", dateString, e);
+            return '';
+        }
+    }
+
+    // --- Event Handlers ---
+    historyListEl.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target.classList.contains('update-btn') || target.classList.contains('delete-btn')) {
+             const historyId = target.dataset.id;
+             if (!historyId) return;
+
+             if (target.classList.contains('update-btn')) {
+                 handleUpdateClick(historyId);
+             } else if (target.classList.contains('delete-btn')) {
+                 handleDeleteClick(historyId);
+             }
+        }
+    });
+
+    function handleUpdateClick(historyId) {
+        const entryToUpdate = currentHistoryData.find(entry => String(entry.ID) === String(historyId));
+        if (!entryToUpdate) {
+            alert('Could not find history entry data.');
+            console.error("Entry not found in currentHistoryData for ID:", historyId);
+            return;
+        }
+
+        // Populate the form
+        document.getElementById('updateHistoryId').value = entryToUpdate.ID;
+        document.getElementById('updateVisitDate').value = formatDateForInput(entryToUpdate.VisitDate); // For context
+        document.getElementById('updateSymptoms').value = entryToUpdate.Symptoms || '';
+        document.getElementById('updateDiagnosis').value = entryToUpdate.Diagnosis || '';
+        document.getElementById('updatePrescription').value = entryToUpdate.Prescription || '';
+        // Handle potential Go sql.NullString structure for Notes
+        const noteValue = (entryToUpdate.Notes && typeof entryToUpdate.Notes === 'object' && entryToUpdate.Notes.Valid)
+                           ? entryToUpdate.Notes.String
+                           : (typeof entryToUpdate.Notes === 'string' ? entryToUpdate.Notes : ''); // Handle plain string or null/invalid
+        document.getElementById('updateNotes').value = noteValue || ''; // Populate Notes
+        document.getElementById('updateTestsRecommended').value = entryToUpdate.TestsRecommended || '';
+        document.getElementById('updateFollowUpDate').value = formatDateForInput(entryToUpdate.FollowUpDate);
+
+        updateDialog.style.display = 'block';
+    }
+
+    function handleDeleteClick(historyId) {
+        if (confirm('Are you sure you want to delete this history entry?')) {
+            deleteHistoryEntry(historyId);
+        }
+    }
+
+    // --- Handle update form submission ---
+    updateForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const historyId = document.getElementById('updateHistoryId').value;
+        const followUpDateValue = document.getElementById('updateFollowUpDate').value;
+
+        // Construct the request body EXACTLY as specified
+        const updatedData = {
+            symptoms: document.getElementById('updateSymptoms').value,
+            diagnosis: document.getElementById('updateDiagnosis').value,
+            prescription: document.getElementById('updatePrescription').value,
+            notes: document.getElementById('updateNotes').value, // Get notes value
+            tests: document.getElementById('updateTestsRecommended').value,
+            follow_up_date: followUpDateValue ? followUpDateValue : null // Send null if date is empty
+        };
+
+        // Remove any keys with null or empty string values IF the API prefers omitting them
+        // (Optional: Uncomment if your API doesn't like empty strings for optional fields)
+        /*
+        Object.keys(updatedData).forEach(key => {
+             if (updatedData[key] === null || updatedData[key] === '') {
+                 delete updatedData[key];
+            }
+         });
+        */
+
+
+        try {
+            // *** IMPORTANT: Verify this API endpoint is correct ***
+            await apiPut(`/patient/history/${historyId}`, updatedData);
+            alert('History entry updated successfully!');
+            closeUpdateDialog();
+            loadHistory(); // Refresh list
+        } catch (e) {
+            alert(`Failed to update history entry: ${e.message}`);
+            console.error("Update failed:", e);
+        }
+    });
+
+    // --- Delete Function ---
+    async function deleteHistoryEntry(historyId) {
+        try {
+            // *** IMPORTANT: Verify this API endpoint is correct ***
+            await apiDelete(`/history/${historyId}`); // Assuming delete uses /history/{id}
+            alert('History entry deleted successfully!');
+            loadHistory(); // Refresh list
+        } catch (e) {
+            alert(`Failed to delete history entry: ${e.message}`);
+            console.error("Delete failed:", e);
+        }
+    }
+
+    // --- Modal Controls ---
+    function closeUpdateDialog() {
+        updateDialog.style.display = 'none';
+        updateForm.reset();
+        document.getElementById('updateHistoryId').value = '';
+    }
+
+    closeDialogBtn.onclick = closeUpdateDialog;
+    cancelUpdateBtn.onclick = closeUpdateDialog;
+
+    window.onclick = function(event) {
+      if (event.target == updateDialog) {
+        closeUpdateDialog();
+      }
+    }
+
+    // --- Initial Load ---
+    loadPatientInfo();
+    loadHistory();
+
+  </script>
+
+</body>
+</html>
