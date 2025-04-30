@@ -22,8 +22,9 @@ SELECT * FROM patients
 WHERE email = $1;
 
 -- name: ListPatients :many
-SELECT * FROM patients
-ORDER BY created_at DESC;
+SELECT p.id as patient_id, p.name as patient_name, p.email, p.phone, p.address, d.name as doctor_name, d.id as doctor_id FROM patients p
+INNER JOIN doctors d ON p.doctor_id = d.id
+ORDER BY p.created_at DESC;
 
 -- name: DeletePatient :exec
 DELETE FROM patients

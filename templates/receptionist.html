@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Receptionist Dashboard</title>
+  <style>
+    /* ... (styles remain the same) ... */
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+    header { background: #28a745; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; font-size: 24px; }
+    header button { padding: 8px 16px; background: #e74c3c; border: none; color: white; border-radius: 4px; cursor: pointer; }
+    header button:hover { background: #c0392b; }
+    .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; text-align: center; }
+    #registerBtn { margin-bottom: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    #registerBtn:hover { background: #0056b3; }
+    .patients-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); margin-bottom: 30px; max-height: 500px; overflow-y: auto; text-align: left; }
+    .patient-card {
+        border-bottom: 1px solid #eee;
+        padding: 12px 0;
+        display: flex; /* Use flexbox for layout */
+        justify-content: space-between; /* Space out details and actions */
+        align-items: flex-start; /* Align items to the top */
+        flex-wrap: wrap; /* Allow wrapping on smaller screens */
+     }
+    .patient-card:last-child { border-bottom: none; }
+    .patient-details { flex-grow: 1; margin-right: 15px;} /* Allow details to take up space */
+    .patient-card h3 { margin: 0 0 5px; font-size: 18px; }
+    .patient-card p { margin: 2px 0; color: #555; }
+    .patient-actions {
+        display: flex;
+        flex-direction: column; /* Stack buttons vertically */
+        gap: 5px; /* Add space between buttons */
+        flex-shrink: 0; /* Prevent action buttons from shrinking */
+    }
+    .patient-actions button {
+        padding: 5px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        border: none;
+        border-radius: 3px;
+        color: white;
+        min-width: 60px; /* Ensure buttons have some width */
+    }
+    .edit-btn { background-color: #ffc107; color: #333; }
+    .edit-btn:hover { background-color: #e0a800; }
+    .delete-btn { background-color: #dc3545; }
+    .delete-btn:hover { background-color: #c82333; }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; /* Ensure modal is on top */
+    }
+    .modal {
+      background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 450px; /* Responsive width */ box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .modal h2 { margin-top: 0; }
+    .modal input, .modal select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    /* Specific control for password field visibility */
+    .form-field-password { display: block; } /* Default state */
+
+    .modal button {
+      padding: 10px 20px; margin: 10px 5px 0 0; border: none; border-radius: 4px; cursor: pointer;
+    }
+    .modal .submit-btn { background: #28a745; color: white; }
+    .modal .submit-btn:hover { background: #218838; }
+    .modal .cancel-btn { background: #6c757d; color: white; }
+    .modal .cancel-btn:hover { background: #5a6268; }
+    .error { color: red; font-size: 14px; margin-top: 10px; min-height: 1em; }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Receptionist Dashboard</h1>
+    <button id="logoutBtn">Logout</button>
+  </header>
+
+  <div class="container">
+    <button id="registerBtn">Register New Patient</button>
+
+    <div class="patients-box" id="patientsList">
+      <p>Loading patients…</p>
+    </div>
+  </div>
+
+  <!-- Modal for Registration / Editing -->
+  <div class="modal-overlay" id="patientModalOverlay">
+    <div class="modal" id="patientModal">
+      <h2 id="modalTitle">Register Patient</h2>
+      <div class="error" id="modalError"></div>
+      <input type="text" id="modalName" placeholder="Name" required disabled/>
+      <input type="email" id="modalEmail" placeholder="Email" required disabled/>
+      <input type="text" id="modalPhone" placeholder="Phone" required disabled/>
+      <input type="text" id="modalAddress" placeholder="Address" required disabled/>
+      <select id="modalDoctorSelect" required disabled>
+        <option value="">Select Doctor</option>
+      </select>
+      <div class="form-field-password" id="modalPasswordFieldGroup">
+          <input type="password" id="modalPassword" placeholder="Password" required />
+      </div>
+      <div style="text-align: right;">
+        <button class="cancel-btn" id="modalCancelBtn">Cancel</button>
+        <button class="submit-btn" id="modalSubmitBtn" disabled>Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://localhost:8080';
+    const API_PATH = '/v1/auth';
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    // --- Global State ---
+    let currentPatients = [];
+    let editingPatientId = null; // Will store the STRING PatientID
+
+    // --- DOM Elements ---
+    const patientsEl = document.getElementById('patientsList');
+    const modalOverlay = document.getElementById('patientModalOverlay');
+    const modal = document.getElementById('patientModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalError = document.getElementById('modalError');
+    const modalNameInput = document.getElementById('modalName');
+    const modalEmailInput = document.getElementById('modalEmail');
+    const modalPhoneInput = document.getElementById('modalPhone');
+    const modalAddressInput = document.getElementById('modalAddress');
+    const modalDoctorSelect = document.getElementById('modalDoctorSelect');
+    const modalPasswordFieldGroup = document.getElementById('modalPasswordFieldGroup');
+    const modalPasswordInput = document.getElementById('modalPassword');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    const modalSubmitBtn = document.getElementById('modalSubmitBtn');
+    const registerBtn = document.getElementById('registerBtn');
+
+    // --- API Helper Functions ---
+    async function apiRequest(method, path, body = null) {
+        const options = {
+            method: method,
+            headers: { 'Authorization': 'Bearer ' + token }
+        };
+        if (body) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(body);
+        }
+        const response = await fetch(BASE_URL + API_PATH + path, options);
+        if (response.status === 204) return null;
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+            console.error(`${method} ${path} failed: ${response.status}`, data);
+            const errorMessage = data?.message || data?.error || `Request failed with status ${response.status}`;
+            throw new Error(errorMessage);
+        }
+        return data;
+    }
+    async function apiGet(path) { return apiRequest('GET', path); }
+    async function apiPost(path, body) { return apiRequest('POST', path, body); }
+    async function apiPut(path, body) { return apiRequest('PUT', path, body); }
+    async function apiDelete(path) { return apiRequest('DELETE', path); }
+
+    // --- Utility to enable/disable all form fields ---
+    function setModalFieldsDisabled(disabled) {
+        modalNameInput.disabled = disabled;
+        modalEmailInput.disabled = disabled;
+        modalPhoneInput.disabled = disabled;
+        modalAddressInput.disabled = disabled;
+        modalDoctorSelect.disabled = disabled;
+        modalSubmitBtn.disabled = disabled;
+    }
+
+    // --- Modal Handling ---
+    function openModalForRegister() {
+        editingPatientId = null;
+        modalTitle.textContent = 'Register New Patient';
+        modalSubmitBtn.textContent = 'Submit';
+        modalError.textContent = '';
+        modalNameInput.value = '';
+        modalEmailInput.value = '';
+        modalPhoneInput.value = '';
+        modalAddressInput.value = '';
+        modalDoctorSelect.value = '';
+        modalPasswordInput.value = '';
+        modalPasswordFieldGroup.style.display = 'block';
+        modalPasswordInput.required = true;
+        setModalFieldsDisabled(false);
+        modalOverlay.style.display = 'flex';
+    }
+
+    // MODIFIED: Accepts and uses STRING patientId
+    async function openModalForEdit(patientId) { // patientId is expected to be a STRING here
+        editingPatientId = patientId; // Store the string ID
+        modalTitle.textContent = 'Edit Patient';
+        modalSubmitBtn.textContent = 'Update';
+        modalError.textContent = '';
+
+        // Reset form, disable fields, show loading state
+        modalNameInput.value = '';
+        modalEmailInput.value = '';
+        modalPhoneInput.value = '';
+        modalAddressInput.value = '';
+        modalDoctorSelect.value = '';
+        modalPasswordInput.value = '';
+        modalPasswordFieldGroup.style.display = 'none';
+        modalPasswordInput.required = false;
+        setModalFieldsDisabled(true);
+        modalError.textContent = 'Loading patient details...';
+        modalOverlay.style.display = 'flex';
+
+        try {
+            // Use the string patientId directly in the URL
+            const patientDetails = await apiGet(`/patient/${patientId}`);
+            console.log("Fetched patient details for edit:", patientDetails);
+            if (!patientDetails) throw new Error("Patient data not found.");
+
+            // Populate form - **CHECK these property names match your GET /patient/{id} response**
+            modalNameInput.value = patientDetails.Name || patientDetails.PatientName || '';
+            modalEmailInput.value = patientDetails.Email || '';
+            modalPhoneInput.value = patientDetails.Phone || '';
+            modalAddressInput.value = patientDetails.Address || '';
+            // Assume DoctorID is returned as number/string compatible with <select> value
+            modalDoctorSelect.value = patientDetails.DoctorID || patientDetails.doctor_id || '';
+            if (!modalDoctorSelect.value) {
+                 console.warn("DoctorID not found/empty on fetched patient object:", patientDetails);
+            }
+
+            modalError.textContent = '';
+            setModalFieldsDisabled(false); // Re-enable fields
+
+        } catch (e) {
+            console.error(`Error fetching patient details for ID ${patientId}:`, e);
+            modalError.textContent = `Failed to load patient details: ${e.message}`;
+            modalSubmitBtn.disabled = true; // Keep submit disabled on error
+        }
+    }
+
+    function closeModal() {
+        editingPatientId = null;
+        modalOverlay.style.display = 'none';
+        setModalFieldsDisabled(false);
+        modalError.textContent = '';
+    }
+
+    // --- Event Handlers ---
+    document.getElementById('logoutBtn').onclick = () => {
+      localStorage.clear();
+      window.location.href = '/login'; // Corrected path
+    };
+
+    registerBtn.onclick = openModalForRegister;
+    modalCancelBtn.onclick = closeModal;
+
+    // MODIFIED: Uses STRING editingPatientId for PUT
+    modalSubmitBtn.onclick = async () => {
+      modalError.textContent = '';
+      const body = {
+        // ** CHECK: Property names expected by your PUT/POST API **
+        name: modalNameInput.value.trim(),
+        email: modalEmailInput.value.trim(),
+        phone: modalPhoneInput.value.trim(),
+        address: modalAddressInput.value.trim(),
+        // doctor_id likely still needs to be an integer for the API
+        doctor_id: modalDoctorSelect.value,
+      };
+
+      // Validation
+    //   if (!body.name || !body.email || !body.phone || !body.address || isNaN(body.doctor_id) || body.doctor_id <= 0) {
+    //      modalError.textContent = 'Name, Email, Phone, Address, and Doctor selection are required.';
+    //      return;
+    //    }
+      if (!/\S+@\S+\.\S+/.test(body.email)) {
+          modalError.textContent = 'Please enter a valid email address.';
+          return;
+      }
+
+      try {
+        setModalFieldsDisabled(true);
+        modalSubmitBtn.textContent = 'Saving...';
+
+        if (editingPatientId !== null) { // editingPatientId is the STRING ID
+          // EDIT MODE (PUT) - Use the string ID in the URL
+          // ** CHECK: PUT endpoint `/patient/{stringId}` **
+          await apiPut(`/patient/${editingPatientId}`, body);
+          alert('Patient updated successfully!');
+        } else {
+          // REGISTER MODE (POST)
+          body.password = modalPasswordInput.value;
+          if (!body.password) {
+            modalError.textContent = 'Password is required for registration.';
+            setModalFieldsDisabled(false);
+            modalSubmitBtn.textContent = 'Submit';
+            return;
+          }
+           // ** CHECK: POST endpoint `/patient/register` **
+          await apiPost('/patient/register', body);
+           alert('Patient registered successfully!');
+        }
+        closeModal();
+        loadPatients(); // Refresh list
+      } catch (e) {
+        modalError.textContent = `Operation failed: ${e.message}`;
+        setModalFieldsDisabled(false);
+         modalSubmitBtn.textContent = (editingPatientId !== null) ? 'Update' : 'Submit';
+      }
+    };
+
+    // MODIFIED: Uses STRING patientId and STRING comparison in find()
+    async function handleDeletePatient(patientId) { // patientId is the STRING ID
+        console.log("handleDeletePatient received ID:", patientId, typeof patientId);
+        console.log("currentPatients for lookup:", currentPatients);
+
+        // Find using the correct property "PatientID" and STRING comparison
+        const patientFromList = currentPatients.find(p => p.PatientID === patientId);
+        console.log("Found patient in list:", patientFromList);
+
+        // ** CHECK: Name property in your /patient/all list response (PatientName? Name?) **
+        const patientName = patientFromList ? (patientFromList.PatientName || patientFromList.Name || 'this patient') : 'this patient';
+
+        if (!confirm(`Are you sure you want to delete ${patientName}?`)) {
+            return;
+        }
+
+        try {
+             // Use the string patientId directly in the URL
+             // ** CHECK: DELETE endpoint `/patient/{stringId}` **
+            await apiDelete(`/patient/${patientId}`);
+            alert(`${patientName} deleted successfully.`);
+            loadPatients(); // Refresh list
+        } catch (e) {
+            console.error(`Error deleting patient ${patientId}:`, e);
+            alert(`Failed to delete patient: ${e.message}`);
+        }
+    }
+
+    // MODIFIED: Reads ID as STRING, does not parse it
+    patientsEl.addEventListener('click', (event) => {
+        const target = event.target;
+        const button = target.closest('.edit-btn, .delete-btn');
+        const patientCard = target.closest('.patient-card');
+
+        if (!patientCard || !button) return;
+
+        // Read the ID directly as a string from the data attribute
+        const patientId = patientCard.dataset.patientId;
+        console.log("Patient card data-patient-id:", patientId, typeof patientId); // Log type
+
+        // Check if the string ID is present and not empty
+        if (!patientId) {
+             console.error("Missing or empty data-patient-id on card:", patientCard);
+             alert("Error: Cannot identify patient. ID missing from element.");
+             return;
+        }
+
+        // Pass the STRING patientId to handlers
+        if (button.classList.contains('edit-btn')) {
+            console.log("Calling openModalForEdit with ID:", patientId);
+            openModalForEdit(patientId);
+        } else if (button.classList.contains('delete-btn')) {
+             console.log("Calling handleDeletePatient with ID:", patientId);
+            handleDeletePatient(patientId);
+        }
+    });
+
+    // --- Data Loading Functions ---
+    async function loadDoctors() {
+      modalDoctorSelect.innerHTML = '<option value="">Select Doctor</option>';
+      try {
+         // ** CHECK: Doctor endpoint & Doctor ID/Name properties (`ID`, `Name`?) **
+        const doctors = await apiGet('/doctor/all');
+        if (Array.isArray(doctors)) {
+            doctors.forEach(doctor => {
+              const option = document.createElement('option');
+              // Assuming doctor ID is a number here, adjust if needed
+              option.value = doctor.ID;
+              option.textContent = doctor.Name;
+              modalDoctorSelect.appendChild(option);
+            });
+        } else {
+             console.warn("Received doctors data is not an array:", doctors);
+        }
+      } catch (e) {
+        console.error('Error loading doctors:', e);
+         modalDoctorSelect.innerHTML = '<option value="">Error loading doctors</option>';
+      }
+    }
+
+    // MODIFIED: Uses "PatientID" for data-patient-id attribute
+    async function loadPatients() {
+      patientsEl.innerHTML = '<p>Loading patients…</p>';
+      currentPatients = [];
+      try {
+        // ** CHECK: Patient list endpoint `/patient/all` **
+        const patients = await apiGet('/patient/all');
+        if (!Array.isArray(patients)) {
+            console.error("Patient list API did not return an array", patients);
+            patientsEl.innerHTML = '<p class="error">Error loading patient data.</p>';
+            return;
+        }
+        if (patients.length === 0) {
+          patientsEl.innerHTML = '<p>No patients found.</p>';
+          return;
+        }
+
+        currentPatients = patients;
+        console.log("Loaded patients list (first item):", currentPatients[0]); // Check structure
+
+        // Render the list using "PatientID" for the data attribute
+        // ** CHECK: Property names in your /patient/all response (PatientName, DoctorName, etc.) **
+        patientsEl.innerHTML = currentPatients.map(p => {
+             // Ensure PatientID exists before creating the element
+             if (!p.PatientID) {
+                 console.warn("Patient object missing PatientID:", p);
+                 return ''; // Skip rendering this card if ID is missing
+             }
+             return `
+              <div class="patient-card" data-patient-id="${p.PatientID}">
+                <div class="patient-details">
+                  <h3>${p.PatientName || p.Name || 'N/A'}</h3>
+                  <p><strong>Doctor assigned:</strong> ${p.DoctorName || 'N/A'}</p>
+                  <p><strong>Email:</strong> ${p.Email || 'N/A'}</p>
+                  <p><strong>Phone:</strong> ${p.Phone || 'N/A'}</p>
+                  <p><strong>Address:</strong> ${p.Address || 'N/A'}</p>
+                </div>
+                <div class="patient-actions">
+                    <button class="edit-btn" aria-label="Edit ${p.PatientName || p.Name || 'Patient'}">Edit</button>
+                    <button class="delete-btn" aria-label="Delete ${p.PatientName || p.Name || 'Patient'}">Delete</button>
+                </div>
+              </div>
+            `;
+        }).join('');
+      } catch (e) {
+        console.error('Error loading patients:', e);
+        patientsEl.innerHTML = `<p class="error">Error loading patients: ${e.message}</p>`;
+        currentPatients = [];
+      }
+    }
+
+    // --- Initialization ---
+    async function initializeDashboard() {
+        await loadDoctors();
+        await loadPatients();
+    }
+
+    initializeDashboard().catch(error => {
+        console.error("Initialization failed:", error);
+        patientsEl.innerHTML = `<p class="error">Failed to initialize dashboard: ${error.message}</p>`;
+    });
+
+  </script>
+
+</body>
+</html>

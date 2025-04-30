@@ -30,6 +30,7 @@ func main(){
 	}
 
 	handlers.RegisterRoutes(r)
-	
+	handlers.RegisterFrontend(r)
+
 	r.Run(":"+port)
 }

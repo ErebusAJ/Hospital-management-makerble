@@ -63,3 +63,17 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 }
+
+func RegisterFrontend(r *gin.Engine) {
+	r.LoadHTMLGlob("templates/*")
+
+	r.Static("/static", "./static")
+
+	r.StaticFile("/doctor", "./templates/doctor.html")
+	r.StaticFile("/receptionist", "./templates/receptionist.html")
+
+
+	r.GET("/login", loginHTML)
+
+
+}

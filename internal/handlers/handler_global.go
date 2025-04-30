@@ -28,7 +28,7 @@ func (cfg *apiConfig) login(c *gin.Context) {
 			// Generate token & respond
 			token, e := utils.GenerateJWT(receptionist.ID, "receptionist")
 			log.Printf("error %v", e)
-			c.IndentedJSON(200, gin.H{"token": token})
+			c.IndentedJSON(200, gin.H{"token": token, "role" : "receptionist", "user_id" : receptionist.ID})
 			return
 		}
 	}
@@ -39,7 +39,7 @@ func (cfg *apiConfig) login(c *gin.Context) {
 			// Generate token & respond
 			token, e := utils.GenerateJWT(doctor.ID, "doctor")
 			log.Printf("error %v", e)
-			c.IndentedJSON(200, gin.H{"token": token})
+			c.IndentedJSON(200, gin.H{"token": token, "role" : "doctor", "user_id" : doctor.ID})
 			return
 		}
 	}
@@ -50,7 +50,7 @@ func (cfg *apiConfig) login(c *gin.Context) {
 			// Generate token & respond
 			token, e := utils.GenerateJWT(patient.ID, "patient")
 			log.Printf("error %v", e)
-			c.IndentedJSON(200, gin.H{"token": token})
+			c.IndentedJSON(200, gin.H{"token": token, "role" : "patient", "user_id" : patient.ID})
 			return
 		}
 	}
