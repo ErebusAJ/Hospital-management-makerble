@@ -1,88 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <title>Doctor Dashboard</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-        }
-
-        header {
-            background: #007bff;
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        header button {
-            padding: 8px 16px;
-            background: #e74c3c;
-            border: none;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        header button:hover {
-            background: #c0392b;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-
-        .profile,
-        .patients-box {
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+        header { background: #007bff; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 24px; }
+        header button { padding: 8px 16px; background: #e74c3c; border: none; color: white; border-radius: 4px; cursor: pointer; }
+        header button:hover { background: #c0392b; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .profile, .patients-box {
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
             margin-bottom: 30px;
         }
-
-        .patients-box {
-            max-height: 400px;
-            overflow-y: auto;
+        .profile-content { display: flex; justify-content: space-between; align-items: center; }
+        .profile-info h2 { margin: 0 0 10px; }
+        .profile-info p { margin: 4px 0; color: #555; }
+        .profile-buttons button {
+            margin-left: 8px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
         }
-
-        .patient-card {
-            border-bottom: 1px solid #eee;
-            padding: 12px 0;
-        }
-
-        .patient-card:last-child {
-            border-bottom: none;
-        }
-
-        .patient-card h3 {
-            margin: 0 0 5px;
-            font-size: 18px;
-        }
-
-        .patient-card p {
-            margin: 2px 0;
-            color: #555;
-        }
-
-        .error {
-            color: red;
-        }
+        .update-doctor { background: #28a745; }
+        .update-doctor:hover { background: #218838; }
+        .delete-doctor { background: #e74c3c; }
+        .delete-doctor:hover { background: #c0392b; }
+        .patients-box { max-height: 400px; overflow-y: auto; }
+        .patient-card { border-bottom: 1px solid #eee; padding: 12px 0; }
+        .patient-card:last-child { border-bottom: none; }
+        .patient-card h3 { margin: 0 0 5px; font-size: 18px; }
+        .patient-card p { margin: 2px 0; color: #555; }
+        .error { color: red; }
+        /* Modal */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; }
+        .modal { background:white; padding:20px; border-radius:8px; width:400px; box-shadow:0 0 10px rgba(0,0,0,0.2); }
+        .modal h2 { margin-top:0; }
+        .modal input { width:100%; padding:8px; margin:8px 0; border:1px solid #ccc; border-radius:4px; }
+        .modal button { padding:10px 20px; margin:10px 5px 0 0; border:none; border-radius:4px; cursor:pointer; }
+        .modal .save-btn { background:#28a745; color:white; }
+        .modal .save-btn:hover { background:#218838; }
+        .modal .cancel-btn { background:#6c757d; color:white; }
+        .modal .cancel-btn:hover { background:#5a6268; }
     </style>
 </head>
-
 <body>
 
     <header>
@@ -103,79 +70,129 @@
         </div>
     </div>
 
+    <!-- Update Doctor Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <h2>Update Profile</h2>
+        <div class="error" id="updateError"></div>
+        <input type="text" id="updName" placeholder="Name" />
+        <input type="email" id="updEmail" placeholder="Email" />
+        <input type="text" id="updPhone" placeholder="Phone" />
+        <input type="text" id="updDegree" placeholder="Degree" />
+        <input type="text" id="updSpecialization" placeholder="Specialization" />
+        <div style="text-align:right;">
+          <button class="cancel-btn" id="cancelUpdate">Cancel</button>
+          <button class="save-btn" id="saveUpdate">Save</button>
+        </div>
+      </div>
+    </div>
+
     <script>
         const BASE_URL = 'http://localhost:8080';
         const API_PATH = '/v1/auth';
-
-        // Redirect if not logged in
         const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/login';
-        }
+        if (!token) window.location.href = '/login';
+        document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); window.location.href = '/login'; };
 
-        document.getElementById('logoutBtn').onclick = () => {
-            localStorage.clear();
-            window.location.href = '/login';
-        };
-
-        // Helper to GET from API with auth header
         async function apiGet(path) {
-            const url = BASE_URL + (path.startsWith(API_PATH) ? path : API_PATH + path);
-            const res = await fetch(url, {
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json'
-                }
+            const res = await fetch(BASE_URL + (path.startsWith(API_PATH) ? path : API_PATH + path), {
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
             });
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(`HTTP ${res.status}: ${text}`);
-            }
+            if (!res.ok) throw new Error(await res.text());
             return res.json();
         }
+        async function apiPut(path, body) {
+            const res = await fetch(BASE_URL + (path.startsWith(API_PATH) ? path : API_PATH + path), {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) throw new Error(await res.text());
+            const text = await res.text();
+            return text ? JSON.parse(text) : null;
+        }
+        async function apiDelete(path) {
+            const res = await fetch(BASE_URL + (path.startsWith(API_PATH) ? path : API_PATH + path), { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+            if (!res.ok) throw new Error(await res.text());
+        }
 
-        let doctorID = null;
+        let doctorData = null;
         const profileEl = document.getElementById('doctorProfile');
         const patientsEl = document.getElementById('patientsList');
+        const modal = document.getElementById('modalOverlay');
+        const updName = document.getElementById('updName');
+        const updEmail = document.getElementById('updEmail');
+        const updPhone = document.getElementById('updPhone');
+        const updDegree = document.getElementById('updDegree');
+        const updSpecialization = document.getElementById('updSpecialization');
+        const updateError = document.getElementById('updateError');
 
-        // Load doctor details
+        document.getElementById('cancelUpdate').onclick = () => { modal.style.display = 'none'; };
+        document.getElementById('saveUpdate').onclick = async () => {
+            try {
+                const body = {
+                    name: updName.value.trim(),
+                    email: updEmail.value.trim(),
+                    phone: updPhone.value.trim(),
+                    degree: updDegree.value.trim(),
+                    specialization: updSpecialization.value.trim()
+                };
+                await apiPut(`/doctor`, body);
+                modal.style.display = 'none';
+                loadDoctor();
+            } catch (e) {
+                updateError.textContent = e.message;
+            }
+        };
+
         async function loadDoctor() {
             try {
                 const doc = await apiGet('/user-details');
-                doctorID = doc.ID;
+                doctorData = doc;
                 profileEl.innerHTML = `
-          <h2>Dr. ${doc.Name}</h2>
-          <p><strong>Email:</strong> ${doc.Email}</p>
-          <p><strong>Specialization:</strong> ${doc.Specialization || 'N/A'}</p>
-          <p><strong>Degree:</strong> ${doc.Degree || 'N/A'}</p>
-        `;
+                    <div class="profile-content">
+                        <div class="profile-info">
+                            <h2>Dr. ${doc.Name}</h2>
+                            <p><strong>Email:</strong> ${doc.Email}</p>
+                            <p><strong>Phone:</strong> ${doc.Phone}</p>
+                            <p><strong>Specialization:</strong> ${doc.Specialization || 'N/A'}</p>
+                            <p><strong>Degree:</strong> ${doc.Degree || 'N/A'}</p>
+                        </div>
+                        <div class="profile-buttons">
+                            <button class="update-doctor" onclick="openUpdate()">Update</button>
+                            <button class="delete-doctor" onclick="deleteDoctor('${doc.ID}')">Delete</button>
+                        </div>
+                    </div>`;
             } catch (e) {
                 profileEl.innerHTML = `<p class="error">Failed to load profile: ${e.message}</p>`;
-                throw e;
             }
         }
 
-        // Load patients list
+        function openUpdate() {
+            updateError.textContent = '';
+            updName.value = doctorData.Name;
+            updEmail.value = doctorData.Email;
+            updPhone.value = doctorData.Phone;
+            updDegree.value = doctorData.Degree;
+            updSpecialization.value = doctorData.Specialization;
+            modal.style.display = 'flex';
+        }
+
         async function loadPatients() {
-            if (!doctorID) {
-                patientsEl.innerHTML = `<p class="error">No doctor ID; cannot load patients.</p>`;
-                return;
-            }
+            if (!doctorData) return;
             try {
-                const patients = await apiGet(`/doctor/${doctorID}/patient`);
+                const patients = await apiGet(`/doctor/${doctorData.ID}/patient`);
                 if (!Array.isArray(patients) || patients.length === 0) {
                     patientsEl.innerHTML = '<p>No patients assigned yet.</p>';
                     return;
                 }
                 patientsEl.innerHTML = patients.map(p => `
-        <div class="patient-card">
-          <h3>${p.Name}</h3>
-          <p><strong>Email:</strong> ${p.Email}</p>
-          <p><strong>Phone:</strong> ${p.Phone || 'N/A'}</p>
-          <p><strong>Address:</strong> ${p.Address || 'N/A'}</p>
-          <button onclick="viewHistory('${p.ID}')">History</button>
-        </div>
-      `).join('');
+                    <div class="patient-card">
+                        <h3>${p.Name}</h3>
+                        <p><strong>Email:</strong> ${p.Email}</p>
+                        <p><strong>Phone:</strong> ${p.Phone || 'N/A'}</p>
+                        <button onclick="viewHistory('${p.ID}')">History</button>
+                    </div>`).join('');
             } catch (e) {
                 patientsEl.innerHTML = `<p class="error">Failed to load patients: ${e.message}</p>`;
             }
@@ -186,10 +203,21 @@
             window.location.href = '/history';
         }
 
-        // Initialize
-        loadDoctor().then(loadPatients).catch(() => { });
+        async function deleteDoctor(id) {
+            if (confirm('Delete your profile?')) {
+                try {
+                    await apiDelete(`/doctor`);
+                    alert('Profile deleted. Logging out.');
+                    localStorage.clear();
+                    window.location.href = '/login';
+                } catch (e) {
+                    alert('Delete failed: ' + e.message);
+                }
+            }
+        }
+
+        loadDoctor().then(loadPatients);
     </script>
 
 </body>
-
 </html>

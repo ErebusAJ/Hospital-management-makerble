@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Patient History</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
@@ -10,6 +11,11 @@
     header button#logoutBtn { padding: 8px 16px; background: #e74c3c; border: none; color: white; border-radius: 4px; cursor: pointer; }
     .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
     .section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); margin-bottom: 30px; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .section-header h2 { margin: 0; }
+    #addRecordBtn { padding: 6px 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    #addRecordBtn:hover { background-color: #218838; }
+
     .history-entry { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: flex-start; }
     .history-entry:last-child { border-bottom: none; }
     .history-details p { margin: 5px 0; color: #555; }
@@ -17,23 +23,25 @@
     .history-actions button { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; min-width: 60px; }
     .update-btn { background-color: #ffc107; color: black; }
     .delete-btn { background-color: #dc3545; color: white; }
-    .error { color: red; }
+    .error { color: red; font-weight: bold; }
 
     /* Modal Styles */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
     .modal-content { background-color: #fefefe; margin: 8% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 550px; border-radius: 8px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
     .close-btn { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; }
     .close-btn:hover, .close-btn:focus { color: black; text-decoration: none; }
-    #updateForm h2 { margin-top: 0; margin-bottom: 20px; text-align: center; }
-    #updateForm label { display: block; margin-top: 12px; margin-bottom: 4px; font-weight: bold; font-size: 14px; color: #333; }
-    #updateForm input[type="text"],
-    #updateForm input[type="date"],
-    #updateForm textarea { width: 100%; /* Adjust width calculation */ padding: 10px; margin-top: 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; /* Include padding in width */ font-size: 14px; }
-    #updateForm textarea { min-height: 80px; resize: vertical; }
-    #updateForm .form-buttons { text-align: right; margin-top: 25px; }
-    #updateForm button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
-    #updateForm button[type="submit"] { background-color: #28a745; color: white; }
-    #updateForm button[type="button"] { background-color: #6c757d; color: white; margin-left: 10px; }
+    .modal-content h2 { margin-top: 0; margin-bottom: 20px; text-align: center; color: #333; }
+    .modal-content label { display: block; margin-top: 12px; margin-bottom: 4px; font-weight: bold; font-size: 14px; color: #333; }
+    .modal-content input[type="text"],
+    .modal-content input[type="date"],
+    .modal-content textarea { width: 100%; /* Adjust width calculation */ padding: 10px; margin-top: 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; /* Include padding in width */ font-size: 14px; }
+    .modal-content textarea { min-height: 80px; resize: vertical; }
+    .modal-content .form-buttons { text-align: right; margin-top: 25px; }
+    .modal-content button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
+    .modal-content button[type="submit"] { background-color: #28a745; color: white; } /* Green for Add/Save */
+    .modal-content button#submitUpdateBtn { background-color: #ffc107; color: black; } /* Yellow for Update Save */
+    .modal-content button[type="button"] { background-color: #6c757d; color: white; margin-left: 10px; } /* Gray for Cancel */
+
   </style>
 </head>
 <body>
@@ -49,7 +57,9 @@
     </div>
 
     <div class="section">
-      <h2>Medical History</h2>
+      <div class="section-header">
+        <h2>Medical History</h2>
+        <button id="addRecordBtn">Add Record</button> </div>
       <div id="historyList">
         <p>Loading history…</p>
       </div>
@@ -58,7 +68,7 @@
 
   <div id="updateDialog" class="modal">
     <div class="modal-content">
-      <span class="close-btn" id="closeDialogBtn">&times;</span>
+      <span class="close-btn" id="closeUpdateDialogBtn">&times;</span>
       <form id="updateForm">
          <h2>Update History Entry</h2>
          <input type="hidden" id="updateHistoryId">
@@ -79,7 +89,8 @@
              <textarea id="updatePrescription" name="Prescription"></textarea>
          </div>
          <div>
-             <label for="updateNotes">Notes:</label>  <textarea id="updateNotes" name="Notes"></textarea>
+             <label for="updateNotes">Notes:</label>
+             <textarea id="updateNotes" name="Notes"></textarea>
          </div>
          <div>
              <label for="updateTestsRecommended">Tests Recommended:</label>
@@ -90,18 +101,60 @@
              <input type="date" id="updateFollowUpDate" name="FollowUpDate">
          </div>
          <div class="form-buttons">
-            <button type="submit">Save Changes</button>
+            <button type="submit" id="submitUpdateBtn">Save Changes</button>
             <button type="button" id="cancelUpdateBtn">Cancel</button>
          </div>
       </form>
     </div>
   </div>
 
+  <div id="addDialog" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" id="closeAddDialogBtn">&times;</span>
+      <form id="addForm">
+         <h2>Add New History Record</h2>
+         <div>
+             <label for="addVisitDate">Visit Date:</label>
+             <input type="date" id="addVisitDate" name="VisitDate" required>
+         </div>
+         <div>
+             <label for="addSymptoms">Symptoms:</label>
+             <textarea id="addSymptoms" name="Symptoms"></textarea>
+         </div>
+         <div>
+             <label for="addDiagnosis">Diagnosis:</label>
+             <textarea id="addDiagnosis" name="Diagnosis"></textarea>
+         </div>
+         <div>
+             <label for="addPrescription">Prescription:</label>
+             <textarea id="addPrescription" name="Prescription"></textarea>
+         </div>
+         <div>
+             <label for="addNotes">Notes:</label>
+             <textarea id="addNotes" name="Notes"></textarea>
+         </div>
+         <div>
+             <label for="addTestsRecommended">Tests Recommended:</label>
+             <textarea id="addTestsRecommended" name="TestsRecommended"></textarea>
+         </div>
+         <div>
+             <label for="addFollowUpDate">Follow Up Date:</label>
+             <input type="date" id="addFollowUpDate" name="FollowUpDate">
+         </div>
+         <div class="form-buttons">
+            <button type="submit" id="submitAddBtn">Add Record</button>
+            <button type="button" id="cancelAddBtn">Cancel</button>
+         </div>
+      </form>
+    </div>
+  </div>
+
+
   <script>
     const BASE_URL = 'http://localhost:8080';
     const API_PATH = '/v1/auth';
     const token = localStorage.getItem('token');
-    const patientID = localStorage.getItem('patientID');
+    const patientID = localStorage.getItem('patientID'); // Keep patientID global
 
     // --- Global Variables ---
     let currentHistoryData = []; // To store fetched history data
@@ -109,10 +162,19 @@
     // --- DOM Elements ---
     const patientInfoEl = document.getElementById('patientInfo');
     const historyListEl = document.getElementById('historyList');
+    const addRecordBtn = document.getElementById('addRecordBtn'); // Button to open add modal
+
+    // Update Modal Elements
     const updateDialog = document.getElementById('updateDialog');
     const updateForm = document.getElementById('updateForm');
-    const closeDialogBtn = document.getElementById('closeDialogBtn');
+    const closeUpdateDialogBtn = document.getElementById('closeUpdateDialogBtn'); // Specific ID
     const cancelUpdateBtn = document.getElementById('cancelUpdateBtn');
+
+    // Add Modal Elements
+    const addDialog = document.getElementById('addDialog');
+    const addForm = document.getElementById('addForm');
+    const closeAddDialogBtn = document.getElementById('closeAddDialogBtn'); // Specific ID
+    const cancelAddBtn = document.getElementById('cancelAddBtn');
 
     // --- Authentication Check ---
     if (!token) {
@@ -135,7 +197,7 @@
     // --- API Helper Functions ---
     async function apiCall(path, method = 'GET', body = null) {
         const url = BASE_URL + (path.startsWith(API_PATH) ? path : API_PATH + path);
-        console.log(`API Call: ${method} ${url}`, body ? body : ''); // Log API calls
+        console.log(`API Call: ${method} ${url}`, body ? JSON.stringify(body) : ''); // Log API calls, stringify body for clarity
         const options = {
             method: method,
             headers: {
@@ -149,30 +211,34 @@
 
         try {
             const res = await fetch(url, options);
+            // Try reading body even if not ok, for error messages
+            let responseData = null;
+            try {
+                 // Handle 204 No Content specifically (no body to parse)
+                 if (res.status === 204 && method === 'DELETE') {
+                     console.log(`API Success: ${method} ${url} - No Content`);
+                     return null; // Return null for successful DELETE with 204
+                 }
+                 // For other statuses, try parsing JSON
+                 responseData = await res.json();
+            } catch (e) {
+                 // If JSON parsing fails, maybe it's text? Or empty?
+                 console.warn("Could not parse response as JSON.", e);
+                 // You might want to try res.text() here if applicable
+            }
+
             if (!res.ok) {
-                let errorText = `HTTP ${res.status} ${res.statusText}`;
-                try {
-                    const errorData = await res.json();
-                    errorText = `HTTP ${res.status}: ${errorData.message || errorData.error || JSON.stringify(errorData)}`;
-                } catch (e) {
-                    try {
-                         errorText = `HTTP ${res.status}: ${await res.text()}`;
-                    } catch (textError) {
-                        console.error("Failed to read error response body:", textError);
-                    }
-                }
-                 console.error("API Error Response:", errorText);
-                 throw new Error(errorText);
+                const errorText = responseData?.message || responseData?.error || `HTTP ${res.status}: ${res.statusText}`;
+                console.error("API Error Response:", errorText, responseData);
+                throw new Error(errorText);
             }
-            if (res.status === 204) { // No Content
-                console.log(`API Success: ${method} ${url} - No Content`);
-                return null;
-            }
-            const data = await res.json();
-            console.log(`API Success: ${method} ${url}`, data);
-            return data;
+
+            console.log(`API Success: ${method} ${url}`, responseData);
+            return responseData; // Return parsed data on success
+
         } catch (e) {
              console.error(`API call failed for ${method} ${path}:`, e);
+             // Use the message from the caught error (which might be from the throw above)
              throw new Error(e.message || `API call failed for ${method} ${path}`);
         }
     }
@@ -180,9 +246,11 @@
     function apiGet(path) { return apiCall(path, 'GET'); }
     function apiPut(path, body) { return apiCall(path, 'PUT', body); }
     function apiDelete(path) { return apiCall(path, 'DELETE'); }
+    function apiPost(path, body) { return apiCall(path, 'POST', body); } // Add apiPost helper
 
     // --- Load Patient Info ---
     async function loadPatientInfo() {
+      patientInfoEl.innerHTML = '<p>Loading patient info…</p>'; // Show loading state
       try {
         const patient = await apiGet(`/patient/${patientID}`);
         patientInfoEl.innerHTML = `
@@ -201,24 +269,26 @@
     async function loadHistory() {
       historyListEl.innerHTML = '<p>Loading history…</p>';
       try {
-        // Assumes API returns 'ID' and potentially 'Notes: { String: "...", Valid: true }'
         const history = await apiGet(`/patient/${patientID}/history`);
-        currentHistoryData = history && Array.isArray(history) ? history : []; // Ensure it's an array
+        currentHistoryData = history && Array.isArray(history) ? history : [];
 
         if (currentHistoryData.length === 0) {
           historyListEl.innerHTML = '<p>No history entries available.</p>';
           return;
         }
 
-        // Check if Notes field looks like Go's sql.NullString
         const getNoteString = (noteField) => {
             if (noteField && typeof noteField === 'object' && noteField.hasOwnProperty('Valid') && noteField.Valid) {
-                return noteField.String || 'N/A'; // Use String if Valid is true
+                return noteField.String || 'N/A';
             } else if (typeof noteField === 'string' && noteField.trim() !== '') {
-                 return noteField; // Handle if it's just a plain string
+                 return noteField;
             }
-            return 'N/A'; // Default if null, not Valid, or empty string
+            return 'N/A';
         };
+
+        // Sort history entries by VisitDate descending (most recent first)
+        currentHistoryData.sort((a, b) => new Date(b.VisitDate) - new Date(a.VisitDate));
+
 
         historyListEl.innerHTML = currentHistoryData.map(entry => `
           <div class="history-entry" data-id="${entry.ID}">
@@ -227,7 +297,8 @@
               <p><strong>Symptoms:</strong> ${entry.Symptoms || 'N/A'}</p>
               <p><strong>Diagnosis:</strong> ${entry.Diagnosis || 'N/A'}</p>
               <p><strong>Prescription:</strong> ${entry.Prescription || 'N/A'}</p>
-              <p><strong>Notes:</strong> ${getNoteString(entry.Notes)}</p> <p><strong>Tests Recommended:</strong> ${entry.TestsRecommended || 'N/A'}</p>
+              <p><strong>Notes:</strong> ${getNoteString(entry.Notes)}</p>
+              <p><strong>Tests Recommended:</strong> ${entry.TestsRecommended || 'N/A'}</p>
               <p><strong>Follow Up Date:</strong> ${entry.FollowUpDate ? new Date(entry.FollowUpDate).toLocaleDateString() : 'N/A'}</p>
             </div>
             <div class="history-actions">
@@ -239,7 +310,7 @@
       } catch (e) {
         historyListEl.innerHTML = `<p class="error">Failed to load history: ${e.message}</p>`;
         console.error("Error loading history:", e);
-        currentHistoryData = []; // Reset data on error
+        currentHistoryData = [];
       }
     }
 
@@ -257,6 +328,13 @@
     }
 
     // --- Event Handlers ---
+
+    // Open Add Record Modal
+    addRecordBtn.addEventListener('click', () => {
+        addDialog.style.display = 'block';
+    });
+
+    // Handle clicks on update/delete buttons (using event delegation)
     historyListEl.addEventListener('click', (event) => {
         const target = event.target;
         if (target.classList.contains('update-btn') || target.classList.contains('delete-btn')) {
@@ -271,6 +349,7 @@
         }
     });
 
+    // Populate and Show Update Modal
     function handleUpdateClick(historyId) {
         const entryToUpdate = currentHistoryData.find(entry => String(entry.ID) === String(historyId));
         if (!entryToUpdate) {
@@ -279,58 +358,84 @@
             return;
         }
 
-        // Populate the form
         document.getElementById('updateHistoryId').value = entryToUpdate.ID;
-        document.getElementById('updateVisitDate').value = formatDateForInput(entryToUpdate.VisitDate); // For context
+        document.getElementById('updateVisitDate').value = formatDateForInput(entryToUpdate.VisitDate);
         document.getElementById('updateSymptoms').value = entryToUpdate.Symptoms || '';
         document.getElementById('updateDiagnosis').value = entryToUpdate.Diagnosis || '';
         document.getElementById('updatePrescription').value = entryToUpdate.Prescription || '';
-        // Handle potential Go sql.NullString structure for Notes
         const noteValue = (entryToUpdate.Notes && typeof entryToUpdate.Notes === 'object' && entryToUpdate.Notes.Valid)
                            ? entryToUpdate.Notes.String
-                           : (typeof entryToUpdate.Notes === 'string' ? entryToUpdate.Notes : ''); // Handle plain string or null/invalid
-        document.getElementById('updateNotes').value = noteValue || ''; // Populate Notes
+                           : (typeof entryToUpdate.Notes === 'string' ? entryToUpdate.Notes : '');
+        document.getElementById('updateNotes').value = noteValue || '';
         document.getElementById('updateTestsRecommended').value = entryToUpdate.TestsRecommended || '';
         document.getElementById('updateFollowUpDate').value = formatDateForInput(entryToUpdate.FollowUpDate);
 
         updateDialog.style.display = 'block';
     }
 
+    // Ask confirmation for Delete
     function handleDeleteClick(historyId) {
         if (confirm('Are you sure you want to delete this history entry?')) {
             deleteHistoryEntry(historyId);
         }
     }
 
-    // --- Handle update form submission ---
+    // --- Handle Add Form Submission ---
+    addForm.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Prevent default submission
+
+        const visitDateValue = document.getElementById('addVisitDate').value;
+        const followUpDateValue = document.getElementById('addFollowUpDate').value;
+
+        // Basic Validation
+        if (!visitDateValue) {
+            alert("Visit Date is required to add a record.");
+            return;
+        }
+
+        // Construct the request body for POST
+        // ** IMPORTANT: Ensure these field names match your backend API expectations for POST **
+        const newRecordData = {
+            symptoms: document.getElementById('addSymptoms').value,
+            diagnosis: document.getElementById('addDiagnosis').value,
+            prescription: document.getElementById('addPrescription').value,
+            notes: document.getElementById('addNotes').value,
+            tests: document.getElementById('addTestsRecommended').value,
+            follow_up_date: followUpDateValue ? followUpDateValue : null // Send null if date is empty
+        };
+
+        try {
+            // *** IMPORTANT: Verify this API endpoint for POST is correct ***
+            // Usually POST to the collection endpoint: /patient/{patientID}/history
+            await apiPost(`/patient/${patientID}/history`, newRecordData);
+            alert('History record added successfully!');
+            closeAddDialog(); // Close the add modal
+            loadHistory(); // Refresh list
+        } catch (e) {
+            alert(`Failed to add history record: ${e.message}`);
+            console.error("Add record failed:", e);
+        }
+    });
+
+
+    // --- Handle Update Form Submission ---
     updateForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const historyId = document.getElementById('updateHistoryId').value;
         const followUpDateValue = document.getElementById('updateFollowUpDate').value;
 
-        // Construct the request body EXACTLY as specified
+        // Construct the request body EXACTLY as specified for PUT
         const updatedData = {
             symptoms: document.getElementById('updateSymptoms').value,
             diagnosis: document.getElementById('updateDiagnosis').value,
             prescription: document.getElementById('updatePrescription').value,
-            notes: document.getElementById('updateNotes').value, // Get notes value
+            notes: document.getElementById('updateNotes').value,
             tests: document.getElementById('updateTestsRecommended').value,
-            follow_up_date: followUpDateValue ? followUpDateValue : null // Send null if date is empty
+            follow_up_date: followUpDateValue ? followUpDateValue : null
         };
 
-        // Remove any keys with null or empty string values IF the API prefers omitting them
-        // (Optional: Uncomment if your API doesn't like empty strings for optional fields)
-        /*
-        Object.keys(updatedData).forEach(key => {
-             if (updatedData[key] === null || updatedData[key] === '') {
-                 delete updatedData[key];
-            }
-         });
-        */
-
-
         try {
-            // *** IMPORTANT: Verify this API endpoint is correct ***
+            // *** IMPORTANT: Verify this API endpoint for PUT is correct ***
             await apiPut(`/patient/history/${historyId}`, updatedData);
             alert('History entry updated successfully!');
             closeUpdateDialog();
@@ -344,8 +449,8 @@
     // --- Delete Function ---
     async function deleteHistoryEntry(historyId) {
         try {
-            // *** IMPORTANT: Verify this API endpoint is correct ***
-            await apiDelete(`/history/${historyId}`); // Assuming delete uses /history/{id}
+            // *** IMPORTANT: Verify this API endpoint for DELETE is correct ***
+            await apiDelete(`/patient/history/${historyId}`); // Assuming delete uses /history/{id}
             alert('History entry deleted successfully!');
             loadHistory(); // Refresh list
         } catch (e) {
@@ -361,12 +466,23 @@
         document.getElementById('updateHistoryId').value = '';
     }
 
-    closeDialogBtn.onclick = closeUpdateDialog;
-    cancelUpdateBtn.onclick = closeUpdateDialog;
+    function closeAddDialog() {
+        addDialog.style.display = 'none';
+        addForm.reset(); // Clear the add form
+    }
 
+    // Close buttons for respective modals
+    closeUpdateDialogBtn.onclick = closeUpdateDialog;
+    cancelUpdateBtn.onclick = closeUpdateDialog;
+    closeAddDialogBtn.onclick = closeAddDialog;
+    cancelAddBtn.onclick = closeAddDialog;
+
+    // Close modal if clicked outside the content area
     window.onclick = function(event) {
       if (event.target == updateDialog) {
         closeUpdateDialog();
+      } else if (event.target == addDialog) {
+        closeAddDialog();
       }
     }
 

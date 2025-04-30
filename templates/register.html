@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-buttons button.active {
+            background: #007bff;
+            color: white;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .tab-buttons button.inactive {
+            background: #e7e7e7;
+            color: #555;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-section input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-section button.submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .form-section button.submit-btn:hover {
+            background: #218838;
+        }
+
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="tab-buttons">
+            <button id="tabReceptionist" class="active">Receptionist</button>
+            <button id="tabDoctor" class="inactive">Doctor</button>
+        </div>
+        <div id="formReceptionist" class="form-section active">
+            <input type="text" id="recName" placeholder="Name" />
+            <input type="email" id="recEmail" placeholder="Email" />
+            <input type="text" id="recPhone" placeholder="Phone" />
+            <input type="text" id="recAddress" placeholder="Address" />
+            <input type="password" id="recPassword" placeholder="Password" />
+            <a href="/login" style=" color: grey; font-weight: 10; display: grid; justify-content: center;">Login!</a>
+            <button class="submit-btn" id="submitRec">Register Receptionist</button>
+            <div class="error" id="errorRec"></div>
+        </div>
+        <div id="formDoctor" class="form-section">
+            <input type="text" id="docName" placeholder="Name" />
+            <input type="email" id="docEmail" placeholder="Email" />
+            <input type="text" id="docPhone" placeholder="Phone" />
+            <input type="text" id="docDegree" placeholder="Degree" />
+            <input type="text" id="docSpecialization" placeholder="Specialization" />
+            <input type="password" id="docPassword" placeholder="Password" />
+            <a href="/login" style=" color: grey; font-weight: 10; display: grid; justify-content: center;">Login!</a>
+            <button class="submit-btn" id="submitDoc">Register Doctor</button>
+            <div class="error" id="errorDoc"></div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8080';
+        const API_PATH = '/v1';
+
+        const tabRec = document.getElementById('tabReceptionist');
+        const tabDoc = document.getElementById('tabDoctor');
+        const formRec = document.getElementById('formReceptionist');
+        const formDoc = document.getElementById('formDoctor');
+
+        tabRec.onclick = () => {
+            tabRec.classList.add('active'); tabRec.classList.remove('inactive');
+            tabDoc.classList.add('inactive'); tabDoc.classList.remove('active');
+            formRec.classList.add('active'); formDoc.classList.remove('active');
+        };
+        tabDoc.onclick = () => {
+            tabDoc.classList.add('active'); tabDoc.classList.remove('inactive');
+            tabRec.classList.add('inactive'); tabRec.classList.remove('active');
+            formDoc.classList.add('active'); formRec.classList.remove('active');
+        };
+
+        async function apiPost(path, body) {
+            const res = await fetch(BASE_URL + API_PATH + path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Error');
+            return data;
+        }
+
+        document.getElementById('submitRec').onclick = async () => {
+            const body = {
+                name: document.getElementById('recName').value.trim(),
+                email: document.getElementById('recEmail').value.trim(),
+                phone: document.getElementById('recPhone').value.trim(),
+                address: document.getElementById('recAddress').value.trim(),
+                password: document.getElementById('recPassword').value
+            };
+            const errEl = document.getElementById('errorRec'); errEl.textContent = '';
+            try {
+                await apiPost('/register/reception', body);
+                alert('Receptionist registered successfully');
+            } catch (e) {
+                errEl.textContent = e.message;
+            }
+        };
+
+        document.getElementById('submitDoc').onclick = async () => {
+            const body = {
+                name: document.getElementById('docName').value.trim(),
+                email: document.getElementById('docEmail').value.trim(),
+                phone: document.getElementById('docPhone').value.trim(),
+                degree: document.getElementById('docDegree').value.trim(),
+                specialization: document.getElementById('docSpecialization').value.trim(),
+                password: document.getElementById('docPassword').value
+            };
+            const errEl = document.getElementById('errorDoc'); errEl.textContent = '';
+            try {
+                await apiPost('/register/doctor', body);
+                alert('Doctor registered successfully');
+            } catch (e) {
+                errEl.textContent = e.message;
+            }
+        };
+    </script>
+</body>
+
+</html>
