@@ -46,6 +46,7 @@ func RegisterRoutes(r *gin.Engine) {
 		protected.GET("/doctor/all", apiCfg.getDoctorList)
 		protected.PUT("/doctor", apiCfg.updateDoctor)
 		protected.DELETE("/doctor", apiCfg.deleteDoctor)
+		protected.GET("/doctor/:doctorID/patient", apiCfg.getPatientsByDoctor)
 
 
 		// patient routes
@@ -55,6 +56,10 @@ func RegisterRoutes(r *gin.Engine) {
 		protected.PUT("/patient/:patientID", apiCfg.updatePatient)
 		protected.DELETE("/patient/:patientID", apiCfg.deletePatient)
 
+		protected.POST("/patient/:patientID/history", apiCfg.registerMedicalData)
+		protected.GET("/patient/:patientID/history", apiCfg.getPatientMedicalData)
+		protected.PUT("/patient/history/:medicalID", apiCfg.updatePatientMedicalData)
+		protected.DELETE("/patient/history/:medicalID", apiCfg.deletePatientMedicalData)
 	}
 
 }

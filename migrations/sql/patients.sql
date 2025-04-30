@@ -29,7 +29,8 @@ ORDER BY created_at DESC;
 DELETE FROM patients
 WHERE id=$1;
 
--- name: GetPatientsByDoctor
-SELECT * FROM patients
-INNER JOIN doctors ON patients.doctor_id = doctors.id 
-WHERE doctor_id=$1  
+-- name: GetPatientsByDoctor :many
+SELECT p.id, p.name, p.email, p.phone, d.name as doctor_name, d.specialization, r.name as receptionist_name, p.receptionist_id FROM patients p
+INNER JOIN doctors d ON p.doctor_id = d.id
+INNER JOIN receptionist r ON r.id = p.receptionist_id
+WHERE doctor_id=$1;

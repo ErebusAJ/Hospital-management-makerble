@@ -69,6 +69,56 @@ func (q *Queries) GetPatientByID(ctx context.Context, id uuid.UUID) (Patient, er
 	return i, err
 }
 
+const getPatientsByDoctor = `-- name: GetPatientsByDoctor :many
+SELECT p.id, p.name, p.email, p.phone, d.name as doctor_name, d.specialization, r.name as receptionist_name, p.receptionist_id FROM patients p
+INNER JOIN doctors d ON p.doctor_id = d.id
+INNER JOIN receptionist r ON r.id = p.receptionist_id
+WHERE doctor_id=$1
+`
+
+type GetPatientsByDoctorRow struct {
+	ID               uuid.UUID
+	Name             string
+	Email            string
+	Phone            string
+	DoctorName       string
+	Specialization   string
+	ReceptionistName string
+	ReceptionistID   uuid.UUID
+}
+
+func (q *Queries) GetPatientsByDoctor(ctx context.Context, doctorID uuid.UUID) ([]GetPatientsByDoctorRow, error) {
+	rows, err := q.db.QueryContext(ctx, getPatientsByDoctor, doctorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPatientsByDoctorRow
+	for rows.Next() {
+		var i GetPatientsByDoctorRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.Phone,
+			&i.DoctorName,
+			&i.Specialization,
+			&i.ReceptionistName,
+			&i.ReceptionistID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPatients = `-- name: ListPatients :many
 SELECT id, name, email, phone, address, receptionist_id, doctor_id, password_hash, created_at, updated_at FROM patients
 ORDER BY created_at DESC

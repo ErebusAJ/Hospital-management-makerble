@@ -6,6 +6,7 @@ package db
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -33,6 +34,21 @@ type Patient struct {
 	PasswordHash   string
 	CreatedAt      sql.NullTime
 	UpdatedAt      sql.NullTime
+}
+
+type PatientHistory struct {
+	ID               uuid.UUID
+	PatientID        uuid.UUID
+	DoctorID         uuid.UUID
+	VisitDate        time.Time
+	Symptoms         string
+	Diagnosis        string
+	Prescription     string
+	Notes            sql.NullString
+	TestsRecommended string
+	FollowUpDate     string
+	CreatedAt        sql.NullTime
+	UpdatedAt        sql.NullTime
 }
 
 type Receptionist struct {
