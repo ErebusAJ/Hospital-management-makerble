@@ -13,3 +13,5 @@ vendor
 main
 
 creds.txt
+
+.env
